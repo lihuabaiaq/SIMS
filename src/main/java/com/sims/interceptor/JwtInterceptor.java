@@ -1,0 +1,49 @@
+package com.sims.interceptor;
+
+import com.sims.config.JwtConfiguration;
+import com.sims.util.JwtUtil;
+import com.sims.util.UserHolder;
+import io.jsonwebtoken.Claims;
+import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.stereotype.Component;
+import org.springframework.web.method.HandlerMethod;
+import org.springframework.web.servlet.HandlerInterceptor;
+
+@Component
+public class JwtInterceptor implements HandlerInterceptor {
+    @Resource
+    JwtConfiguration jwtConfiguration;
+
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+
+        String requestURI = request.getRequestURI();
+
+        // 放行 Knife4j 所有相关资源
+        if (requestURI.startsWith("/doc.html") ||
+                requestURI.startsWith("/v3/api-docs") ||
+                requestURI.startsWith("/webjars/") ||   // 静态资源
+                requestURI.startsWith("/swagger-ui/") || // Swagger UI 资源（可选）
+                requestURI.startsWith("/swagger-resources")||
+                requestURI.equals("/error")) {  // API 元信息
+            return true;
+        }
+
+        String token = request.getHeader(jwtConfiguration.getTokenName());
+        if (token==null||token.isEmpty()){
+            response.setStatus(401);
+            return false;
+        }
+
+        try {
+            Claims claims = JwtUtil.parseJWT(jwtConfiguration.getSecretKey(), token);
+            Long id = claims.get("id", Long.class);
+            UserHolder.saveId(id);
+            return true;
+        } catch (Exception e) {
+            response.setStatus(401);
+            return false;
+        }
+    }
+}
