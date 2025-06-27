@@ -16,7 +16,7 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher>  imp
         String password = teacherDTO.getPassword();
         Long teacherId = teacherDTO.getTeacherId();
         Teacher teacher = this.query().eq("teacher_id", teacherId).one();
-        if (teacher != null && teacher.getPassword().equals(MD5Util.encrypt(password))) {
+        if (teacher != null && teacher.getPassword().equals(password)) {
             return teacher;
         }
         throw new RuntimeException("用户名或密码错误");

@@ -18,7 +18,7 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
         String password = studentDTO.getPassword();
         Long studentId = studentDTO.getStudentId();
         Student student = this.query().eq("student_id", studentId).one();
-        if (student != null && student.getPassword().equals(MD5Util.encrypt(password))) {
+        if (student != null && student.getPassword().equals(password)) {
             return student;
         }
         throw new RuntimeException("用户名或密码错误");
