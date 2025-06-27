@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sims.mapper.StudentMapper">
+
+    <update id="updateInfo">
+        update student <set>
+        <if test="phone != null">phone = #{phone}</if>
+        <if test="email != null">email = #{email}</if>
+        <if test="changePassword != null">password = #{changePassword}</if>
+        where student_id = #{studentId}
+    </set>
+    </update>
+    <select id="getAVGScore" resultType="java.lang.Double">
+        select avg(grade.final_grade) from grade left join course on grade.course_id = course.course_id
+        <where>
+            <if test="studentId != null">student_id = #{studentId}</if>
+        </where>
+        group by course.category
+    </select>
+
+
+</mapper>
