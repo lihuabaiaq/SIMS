@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.sims.mapper.CourseMapper">
     <select id="getGrade" resultType="com.sims.pojo.vo.StudentGradeVO">
-        select c.course_name,c.category,c.grade_requirement courseYear,c.credit,g.*
+        select c.course_name,c.category courseCategory,c.grade_requirement courseYear,c.credit,g.*
         from course c left join grade g on c.course_id = g.course_id
         where g.student_id = #{studentId}
     </select>
@@ -10,7 +10,8 @@
         select c.course_name,c.category,c.grade_requirement courseYear,c.credit,g.*
         from course c left join grade g on c.course_id = g.course_id
         <where>
-            <if test="courseName != null">c.course_name like concat('%',#{courseName},'%')</if>
+            student_id=#{studentId}
+            <if test="courseName != null">and c.course_name like concat('%',#{courseName},'%')</if>
             <if test="courseCategory != null">and c.category = #{courseCategory}</if>
             <if test="courseYear != null">and c.grade_requirement = #{courseYear}</if>
             <if test="credit != null">and c.credit = #{credit}</if>

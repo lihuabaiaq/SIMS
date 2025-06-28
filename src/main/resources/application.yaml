@@ -12,9 +12,9 @@ spring:
 
 sims:
     jwt:
-        secret-key: lihuabaiaq
+        secret-key: lihuabaiaq123456789987654321123456789
         ttl-millis: 86400000000
-        token-name: token
+        token-name: Authorization
 
 springdoc:
   swagger-ui:

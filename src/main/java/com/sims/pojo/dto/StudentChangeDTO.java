@@ -6,7 +6,7 @@ import lombok.Data;
 public class StudentChangeDTO {
     private String phone;
     private String email;
-    private Long StudentId;
-    private String OriginalPassword;
-    private String ChangePassword;
+    private Long studentId;
+    private String originPassword;
+    private String changePassword;
 }

@@ -12,6 +12,7 @@ import com.sims.pojo.vo.ScoreAVGVO;
 import com.sims.pojo.vo.StudentGradeVO;
 import com.sims.service.StudentService;
 import com.sims.util.MD5Util;
+import io.lettuce.core.ScriptOutputType;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 
@@ -44,11 +45,13 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
 
     @Override
     public void changeInfo(StudentChangeDTO studentChangeDTO) {
+        System.out.println(studentChangeDTO);
         Student student=query()
                 .eq("student_id",studentChangeDTO.getStudentId())
                 .one();
-        if(student==null || !student.getPassword().equals(studentChangeDTO.getOriginalPassword()))
+        if(student==null || !student.getPassword().equals(MD5Util.encrypt(studentChangeDTO.getOriginPassword())))
             throw new RuntimeException("原密码错误,无法修改");
+        studentChangeDTO.setChangePassword(MD5Util.encrypt(studentChangeDTO.getChangePassword()));
         studentMapper.updateInfo(studentChangeDTO);
     }
 
@@ -59,6 +62,7 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
 
     @Override
     public List<StudentGradeVO> select(StudentGradeDTO studentGradeDTO) {
+        System.out.println("1111");
         return courseMapper.select(studentGradeDTO);
     }
 

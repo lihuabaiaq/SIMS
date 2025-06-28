@@ -32,6 +32,7 @@ public class StudentController {
     @PostMapping("/login")
     public Result<StudentLoginVO> studentLogin(@RequestBody StudentDTO studentDTO){
         Student student = studentService.studentLogin(studentDTO);
+        System.out.println("接收到前端传来的账号密码");
         Map<String, Object> claims = new HashMap<>();
         claims.put("id", student.getStudentId());
         String token = JwtUtil.createJWT(jwtConfiguration.getSecretKey(), jwtConfiguration.getTtlMillis(), claims);
@@ -53,7 +54,7 @@ public class StudentController {
         return Result.ok(grade);
     }
 
-    @GetMapping("/select")
+    @PostMapping("/grade/select")
     private Result<List<StudentGradeVO>> select(@RequestBody StudentGradeDTO studentGradeDTO){
         List<StudentGradeVO> grade = studentService.select(studentGradeDTO);
         return Result.ok(grade);

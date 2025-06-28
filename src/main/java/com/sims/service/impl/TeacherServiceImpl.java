@@ -6,6 +6,7 @@ import com.sims.pojo.dto.TeacherChangeDTO;
 import com.sims.pojo.dto.TeacherDTO;
 import com.sims.pojo.entity.Teacher;
 import com.sims.service.TeacherService;
+import com.sims.util.MD5Util;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 
@@ -31,7 +32,7 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher>  imp
         Teacher teacher=query()
                 .eq("teacher_id",teacherChangeDTO.getTeacherId())
                 .one();
-        if(teacher==null || !teacher.getPassword().equals(teacherChangeDTO.getOriginalPassword()))
+        if(teacher==null || !teacher.getPassword().equals(MD5Util.encrypt(teacherChangeDTO.getOriginalPassword())))
             throw new RuntimeException("原密码错误,无法修改");
         teacherMapper.updateInfo(teacherChangeDTO);
     }

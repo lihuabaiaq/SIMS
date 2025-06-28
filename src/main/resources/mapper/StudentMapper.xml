@@ -4,11 +4,11 @@
 
     <update id="updateInfo">
         update student <set>
-        <if test="phone != null">phone = #{phone}</if>
-        <if test="email != null">email = #{email}</if>
-        <if test="changePassword != null">password = #{changePassword}</if>
-        where student_id = #{studentId}
+        <if test="phone != null">phone = #{phone},</if>
+        <if test="email != null">email = #{email},</if>
+        <if test="changePassword != null">password = #{changePassword},</if>
     </set>
+        where student_id = #{studentId}
     </update>
     <select id="getAVGScore" resultType="java.lang.Double">
         select avg(grade.final_grade) from grade left join course on grade.course_id = course.course_id

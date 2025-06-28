@@ -7,6 +7,6 @@ public class StudentGradeDTO {
     private Long studentId;
     private String courseName;
     private Integer credit;
-    private Integer courseCategory;
+    private String courseCategory;
     private String courseYear;
 }

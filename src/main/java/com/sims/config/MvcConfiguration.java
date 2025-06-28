@@ -26,20 +26,25 @@ public class MvcConfiguration implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(jwtInterceptor)
                 .addPathPatterns("/**")
-                .excludePathPatterns("/login/**", "/**/*.html", "/**/*.js", "/**/*.css")
-                .excludePathPatterns("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
-                .excludePathPatterns(HttpMethod.OPTIONS.toString(), "/**");  // 排除OPTIONS请求
+                .excludePathPatterns(
+                        "/*/login",          // 登录接口
+                        "/**/*.html",         // 静态资源
+                        "/**/*.js",
+                        "/**/*.css",
+                        "/v3/api-docs/**",    // API文档
+                        "/swagger-ui/**",
+                        "/swagger-ui.html"
+                );
     }
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
                 .allowedOrigins("http://localhost:8081") // 前端开发服务器地址
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS","PATCH")
                 .allowedHeaders("*")
                 .allowCredentials(true)
                 .maxAge(3600);
     }
-
 }
 
