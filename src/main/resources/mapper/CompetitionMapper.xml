@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sims.mapper.CompetitionMapper">
+
+    <select id="getCourseWeight" resultType="com.sims.pojo.entity.CompetitionCourseWeight">
+        select * from competitionrecommendationweight where competition_name=#{competitionName}
+    </select>
+</mapper>
