@@ -13,10 +13,13 @@ import com.sims.service.CompetitionService;
 import jakarta.annotation.Resource;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class CompetitionServiceImpl extends ServiceImpl<CompetitionMapper, Competition> implements CompetitionService {
@@ -39,31 +42,34 @@ public class CompetitionServiceImpl extends ServiceImpl<CompetitionMapper, Compe
     }
 
     @Override
+    @Transactional
     public List<CompetitionVO> competitionRecommend(CompetitionDTO competitionDTO) {
         Long studentId = competitionDTO.getStudentId();
         List<AVGScore> avgScores = courseMapper.getAVGScore(studentId);
+        if(avgScores.isEmpty())
+            throw new RuntimeException("学号错误，没有成绩");
+        Map<String, Double> avgScoreMap = avgScores.stream()
+                .collect(Collectors.toMap(AVGScore::getCourseCategory, AVGScore::getAvgScore));
         List<Competition> competitions = this.query()
                 .lt(competitionDTO.getMaxDate() != null, "registration_deadline", competitionDTO.getMaxDate())
                 .gt(competitionDTO.getMinDate() != null, "registration_deadline", competitionDTO.getMinDate())
                 .eq(competitionDTO.getCategory() != null, "category", competitionDTO.getCategory())
                 .eq(competitionDTO.getLevel() != null, "level", competitionDTO.getLevel())
                 .list();
-        List<CompetitionVO> competitionVOS = new ArrayList<>();
-        competitions.forEach(competition -> {
+        List<CompetitionVO> competitionVOS = competitions.stream(). map(competition -> {
             CompetitionVO competitionVO = new CompetitionVO();
             BeanUtils.copyProperties(competition, competitionVO);
             List<CompetitionCourseWeight> courseWeights = competitionMapper.getCourseWeight(competition.getName());
             double comWeight = 0.0;
             StringBuilder stringBuilder = new StringBuilder();
             for (CompetitionCourseWeight courseWeight : courseWeights) {
-                for (AVGScore avgScore : avgScores) {
-                    if (avgScore.getCourseCategory().equals(courseWeight.getCourseCategory())) {
-                        comWeight += avgScore.getAvgScore() * courseWeight.getWeight().doubleValue();
-                        stringBuilder.append(courseWeight.getCourseCategory()).append("获得了").append(avgScore.getAvgScore()).append("分\n");
-                        break;
+                if(avgScoreMap.containsKey(courseWeight.getCourseCategory()))
+                {
+                    Double avgScore = avgScoreMap.get(courseWeight.getCourseCategory());
+                    comWeight += avgScore* courseWeight.getWeight().doubleValue();
+                    stringBuilder.append(courseWeight.getCourseCategory()).append("获得了").append(avgScore).append("分\n");
                     }
                 }
-            }
             String recommendStatus;
             if (comWeight > 80) {
                 recommendStatus = "推荐";
@@ -74,7 +80,8 @@ public class CompetitionServiceImpl extends ServiceImpl<CompetitionMapper, Compe
             String reason = stringBuilder.toString();
             competitionVO.setRecommendStatus(recommendStatus);
             competitionVO.setReason(reason);
-        });
+            return competitionVO;
+        }).collect(Collectors.toList());
         return competitionVOS;
     }
 }
