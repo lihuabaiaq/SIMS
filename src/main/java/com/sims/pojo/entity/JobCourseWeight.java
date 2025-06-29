@@ -32,17 +32,17 @@ public class JobCourseWeight implements Serializable {
     * 
     */
     
-    private Long job_id;
+    private Long jobId;
     /**
     * 课程类别
     */
     @Size(max= 50,message="编码长度不能超过50")
     @Length(max= 50,message="编码长度不能超过50")
-    private String course_category;
+    private String courseCategory;
     /**
     * 权重值
     */
     @NotNull(message="[权重值]不能为空")
-    private BigDecimal weight;
+    private Double weight;
 
 }

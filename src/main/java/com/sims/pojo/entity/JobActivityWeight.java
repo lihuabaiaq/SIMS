@@ -37,11 +37,11 @@ public class JobActivityWeight implements Serializable {
     */
     @Size(max= 50,message="编码长度不能超过50")
     @Length(max= 50,message="编码长度不能超过50")
-    private String activity_category;
+    private String activityCategory;
     /**
     * 权重值
     */
     @NotNull(message="[权重值]不能为空")
-    private BigDecimal weight;
+    private Double weight;
 
 }

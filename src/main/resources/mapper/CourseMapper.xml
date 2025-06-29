@@ -20,7 +20,7 @@
         </where>
     </select>
 
-    <select id="getAVGScore" resultType="com.sims.pojo.entity.AVGScore">
+    <select id="getAVGScoreAsCategory" resultType="com.sims.pojo.entity.AVGScore">
         select c.category courseCategory,avg(g.final_grade) avgScore
         from course c left join grade g on c.course_id = g.course_id
         where g.student_id = #{studentId}

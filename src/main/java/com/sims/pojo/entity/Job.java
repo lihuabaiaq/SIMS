@@ -27,7 +27,7 @@ public class Job implements Serializable {
     */
     @NotNull(message="[]不能为空")
     
-    private Long job_id;
+    private Long jobId;
     /**
     * 
     */
@@ -54,7 +54,7 @@ public class Job implements Serializable {
     */
     @Size(max= 50,message="编码长度不能超过50")
     @Length(max= 50,message="编码长度不能超过50")
-    private String job_type;
+    private String jobType;
     /**
     * 
     */
@@ -74,7 +74,7 @@ public class Job implements Serializable {
     @Size(max= 50,message="编码长度不能超过50")
     
     @Length(max= 50,message="编码长度不能超过50")
-    private String salary_range;
+    private String salaryRange;
     /**
     * 
     */
@@ -88,23 +88,14 @@ public class Job implements Serializable {
     @Size(max= 50,message="编码长度不能超过50")
     
     @Length(max= 50,message="编码长度不能超过50")
-    private String experience_requirement;
+    private String experienceRequirement;
     /**
     * 
     */
     @Size(max= 50,message="编码长度不能超过50")
     
     @Length(max= 50,message="编码长度不能超过50")
-    private String education_requirement;
-    /**
-    * 
-    */
-    
-    private Date created_at;
-    /**
-    * 
-    */
-    
-    private Date updated_at;
+    private String educationRequirement;
+
 
 }
