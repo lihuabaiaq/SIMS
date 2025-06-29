@@ -32,9 +32,10 @@ public class CompetitionServiceImpl extends ServiceImpl<CompetitionMapper, Compe
     CourseMapper courseMapper;
     @Override
     public List<Competition> recentCompetition() {
-        LocalDate localDate = LocalDate.now().plusMonths(6L);
+        LocalDate exceptDate = LocalDate.now().plusMonths(6L);
         List<Competition> competitions = this.query()
-                .lt("registration_deadline", localDate)
+                .lt("registration_deadline", exceptDate)
+                .gt("registration_deadline", LocalDate.now())
                 .list();
         if(competitions.isEmpty())
             throw new RuntimeException("没有近期的竞赛");
@@ -53,6 +54,7 @@ public class CompetitionServiceImpl extends ServiceImpl<CompetitionMapper, Compe
         List<Competition> competitions = this.query()
                 .lt(competitionDTO.getMaxDate() != null, "registration_deadline", competitionDTO.getMaxDate())
                 .gt(competitionDTO.getMinDate() != null, "registration_deadline", competitionDTO.getMinDate())
+                .gt("registration_deadline", LocalDate.now())
                 .eq(competitionDTO.getCategory() != null, "category", competitionDTO.getCategory())
                 .eq(competitionDTO.getLevel() != null, "level", competitionDTO.getLevel())
                 .list();
@@ -84,5 +86,13 @@ public class CompetitionServiceImpl extends ServiceImpl<CompetitionMapper, Compe
             return competitionVO;
         }).collect(Collectors.toList());
         return competitionVOS;
+    }
+
+    @Override
+    public List<Competition> getALl() {
+        List<Competition> allcompetitions = this.query()
+                .gt("registration_deadline", LocalDate.now())
+                .list();
+        return allcompetitions;
     }
 }

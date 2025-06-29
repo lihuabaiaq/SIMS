@@ -11,4 +11,6 @@ public interface CompetitionService extends IService<Competition> {
     List<Competition> recentCompetition();
 
     List<CompetitionVO> competitionRecommend(CompetitionDTO competitionDTO);
+
+    List<Competition> getALl();
 }
