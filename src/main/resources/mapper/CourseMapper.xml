@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.sims.mapper.CourseMapper">
+
     <select id="getGrade" resultType="com.sims.pojo.vo.StudentGradeVO">
         select c.course_name,c.category courseCategory,c.grade_requirement courseYear,c.credit,g.*
         from course c left join grade g on c.course_id = g.course_id
         where g.student_id = #{studentId}
     </select>
+
     <select id="select" resultType="com.sims.pojo.vo.StudentGradeVO">
         select c.course_name,c.category,c.grade_requirement courseYear,c.credit,g.*
         from course c left join grade g on c.course_id = g.course_id
@@ -16,5 +18,12 @@
             <if test="courseYear != null">and c.grade_requirement = #{courseYear}</if>
             <if test="credit != null">and c.credit = #{credit}</if>
         </where>
+    </select>
+
+    <select id="getAVGScore" resultType="com.sims.pojo.entity.AVGScore">
+        select c.category courseCategory,avg(g.final_grade) avgScore
+        from course c left join grade g on c.course_id = g.course_id
+        where g.student_id = #{studentId}
+        group by c.category
     </select>
 </mapper>

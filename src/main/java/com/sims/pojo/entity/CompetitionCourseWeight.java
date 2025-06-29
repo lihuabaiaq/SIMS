@@ -34,13 +34,13 @@ public class CompetitionCourseWeight implements Serializable {
     @Size(max= 50,message="编码长度不能超过50")
 
     @Length(max= 50,message="编码长度不能超过50")
-    private String competition_category;
+    private String competitionName;
     /**
     * 课程类别
     */
     @Size(max= 50,message="编码长度不能超过50")
     @Length(max= 50,message="编码长度不能超过50")
-    private String course_category;
+    private String courseCategory;
     /**
     * 权重值
     */

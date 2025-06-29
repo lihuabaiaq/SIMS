@@ -27,7 +27,7 @@ public class Competition implements Serializable {
     */
     @NotNull(message="[]不能为空")
     
-    private Long competition_id;
+    private Long competitionId;
     /**
     * 
     */
@@ -59,12 +59,12 @@ public class Competition implements Serializable {
     * 
     */
     
-    private Date start_date;
+    private Date startDate;
     /**
     * 
     */
     
-    private Date end_date;
+    private Date endDate;
     /**
     * 
     */
@@ -76,16 +76,16 @@ public class Competition implements Serializable {
     * 
     */
     
-    private Date registration_deadline;
+    private Date registrationDeadline;
     /**
     * 
     */
     
-    private Integer max_participants;
+    private Integer maxParticipants;
     /**
     * 
     */
     
-    private Integer current_participants;
+    private Integer currentParticipants;
 
 }
