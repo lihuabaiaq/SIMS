@@ -6,7 +6,7 @@ import lombok.Data;
 @Data
 public class CompetitionVO  {
    private Long competitionId;
-   private Integer comWeight;
+   private Double comWeight;
    private String reason;
    private String recommendStatus;
 }

@@ -22,12 +22,12 @@ public class CompetitionController {
         return Result.ok(competitions);
     }
 
-    @PostMapping("/recommend")
+    @PostMapping("/recommendations")
     public Result<List<CompetitionVO>> competitionRecommend(@RequestBody CompetitionDTO competitionDTO){
         return Result.ok(competitionService.competitionRecommend(competitionDTO));
     }
 
-    @GetMapping("/getAllcompetition")
+    @GetMapping("/all")
     public Result<List<Competition>> getAllcompetition(){
         return Result.ok(competitionService.list());
     }

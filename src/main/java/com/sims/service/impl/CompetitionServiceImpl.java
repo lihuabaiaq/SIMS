@@ -80,6 +80,7 @@ public class CompetitionServiceImpl extends ServiceImpl<CompetitionMapper, Compe
             String reason = stringBuilder.toString();
             competitionVO.setRecommendStatus(recommendStatus);
             competitionVO.setReason(reason);
+            competitionVO.setComWeight(comWeight);
             return competitionVO;
         }).collect(Collectors.toList());
         return competitionVOS;
