@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sims.mapper.CompetitionMapper;
 import com.sims.mapper.CourseMapper;
 import com.sims.pojo.dto.CompetitionDTO;
-import com.sims.pojo.dto.StudentGradeDTO;
 import com.sims.pojo.entity.AVGScore;
 import com.sims.pojo.entity.Competition;
 import com.sims.pojo.entity.CompetitionCourseWeight;
@@ -16,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -45,7 +43,7 @@ public class CompetitionServiceImpl extends ServiceImpl<CompetitionMapper, Compe
     @Transactional
     public List<CompetitionVO> competitionRecommend(CompetitionDTO competitionDTO) {
         Long studentId = competitionDTO.getStudentId();
-        List<AVGScore> avgScores = courseMapper.getAVGScore(studentId);
+        List<AVGScore> avgScores = courseMapper.getAVGScoreAsCategory(studentId);
         if(avgScores.isEmpty())
             throw new RuntimeException("学号错误，没有成绩");
         Map<String, Double> avgScoreMap = avgScores.stream()

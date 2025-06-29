@@ -38,11 +38,11 @@ public class JobCompetitionWeight implements Serializable {
     */
     @Size(max= 50,message="编码长度不能超过50")
     @Length(max= 50,message="编码长度不能超过50")
-    private String competition_category;
+    private String competitionCategory;
     /**
     * 权重值
     */
     @NotNull(message="[权重值]不能为空")
-    private BigDecimal weight;
+    private Double weight;
 
 }
