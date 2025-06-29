@@ -38,7 +38,7 @@ public class JwtInterceptor implements HandlerInterceptor {
         String token = request.getHeader(jwtConfiguration.getTokenName());
         String[] s = token.split(" ", 2);
         token=s[1];
-        //TODO：前端修改返回的token，剪掉前面的B~。
+        //模拟 Spring Security 这样的专业安全框架，进行token解析前的预处理
         if (token==null||token.isEmpty()){
             response.setStatus(401);
             System.out.println("token失效，不放行");
