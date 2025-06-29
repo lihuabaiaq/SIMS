@@ -24,4 +24,5 @@ public class JobController {
     private Result<List<JobVO>> JobRecommend(@RequestParam Long studentId) {
         return Result.ok(jobService.JobRecommend(studentId));
     }
+    //TODO：增加一个刷新接口
 }

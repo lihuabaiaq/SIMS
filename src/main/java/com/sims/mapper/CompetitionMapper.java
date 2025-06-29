@@ -16,5 +16,5 @@ public interface CompetitionMapper extends BaseMapper<Competition> {
 
 
     @MapKey("category")
-    Map<String,List<CompetitionAward>> getCompetitionAward(Long studentId);
+    List<CompetitionAward> getCompetitionAward(Long studentId);
 }

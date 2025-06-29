@@ -32,7 +32,7 @@ public class JobCompetitionWeight implements Serializable {
     * 
     */
     
-    private Long job_id;
+    private Long jobId;
     /**
     * 竞赛类别
     */

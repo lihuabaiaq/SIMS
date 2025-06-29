@@ -41,14 +41,15 @@ public class JobServiceImpl extends ServiceImpl<JobMapper, Job> implements JobSe
     public List<JobVO> JobRecommend(Long studentId) {
         String jobKey = "job:commend:" + studentId;
         Set<String> redisJobVOS = stringRedisTemplate.opsForZSet().reverseRange(jobKey, 0, 5);
-        if (redisJobVOS != null) {
+        if (!redisJobVOS.isEmpty()) {
             return redisJobVOS.stream()
                     .map(jobVO -> JSONObject.parseObject(jobVO, JobVO.class))
                     .collect(Collectors.toList());
         }
         Map<String, Double> scoreMap = courseMapper.getAVGScoreAsCategory(studentId)
                 .stream().collect(Collectors.toMap(AVGScore::getCourseCategory, AVGScore::getAvgScore));
-        Map<String, List<CompetitionAward>> competitionMap = competitionMapper.getCompetitionAward(studentId);
+        Map<String, List<CompetitionAward>> competitionMap = competitionMapper.getCompetitionAward(studentId)
+                .stream().collect(Collectors.groupingBy(CompetitionAward::getCategory));
         List<String> activities = activityMapper.getActivities(studentId);
         List<Job> jobs = this.list();
         List<JobVO> jobVOS = jobs.stream().map(job -> {
@@ -89,6 +90,7 @@ public class JobServiceImpl extends ServiceImpl<JobMapper, Job> implements JobSe
             jobVO.setReason(stringBuilder.toString());
             jobVO.setScore(score);
             stringRedisTemplate.opsForZSet().add(jobKey, JSONObject.toJSONString(jobVO), score);
+            System.out.println("存储在redis里面");
         });
         try {
             Set<String> JobVOS = stringRedisTemplate.opsForZSet().reverseRange(jobKey, 0, 5);

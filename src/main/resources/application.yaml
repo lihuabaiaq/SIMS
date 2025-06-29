@@ -9,7 +9,11 @@ spring:
     url: jdbc:mysql://1.92.73.197:3306/sism?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&characterEncoding=utf-8
     username: simsuser
     password: simssql
-
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+      database: 0
 sims:
     jwt:
         secret-key: lihuabaiaq123456789987654321123456789
