@@ -5,11 +5,11 @@
     <select id="getCourseWeight" resultType="com.sims.pojo.entity.CompetitionCourseWeight">
         select * from competitionrecommendationweight where competition_name=#{competitionName}
     </select>
-    <select id="getCompetitionAward" resultType="java.util.Map">
-        select c.name,c.category as category,c.level,sc.award from competition c
-            join studentcompetition sc on c.competition_id = sc.competition_id
-        where sc.student_id = #{studentId}
-    </select>
+    <select id="getCompetitionAward" resultType="com.sims.pojo.entity.CompetitionAward">
+   select c.name,c.category as category,c.level,sc.award from competition c
+                        join studentcompetition sc on c.competition_id = sc.competition_id
+                                     where sc.student_id = #{studentId}
+                                                                                           </select>
 
 
 </mapper>

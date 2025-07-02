@@ -5,9 +5,9 @@
         select * from jobrecommendationweight where job_id=#{jobId}
     </select>
     <select id="getCompetitionWeight" resultType="com.sims.pojo.entity.JobCompetitionWeight">
-        select * from jobrecommendationweight where job_id= #{jobId}
+        select * from jobcompetitionweight where job_id= #{jobId}
     </select>
     <select id="getActivityWeight" resultType="com.sims.pojo.entity.JobActivityWeight">
-        select * from jobrecommendationweight where job_id= #{jobId}
+        select * from jobactivityweight where job_id= #{jobId}
     </select>
 </mapper>

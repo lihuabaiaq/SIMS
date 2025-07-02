@@ -16,7 +16,7 @@ public class CompetitionController {
     @Resource
     CompetitionService competitionService;
 
-    @GetMapping()
+    @GetMapping("/recent")
     public Result<List<Competition>> getRecentCompetition(){
         List<Competition> competitions=competitionService.recentCompetition();
         return Result.ok(competitions);
@@ -29,7 +29,7 @@ public class CompetitionController {
 
     @GetMapping("/all")
     public Result<List<Competition>> getAllcompetition(){
-        return Result.ok(competitionService.list());
+        return Result.ok(competitionService.getALl());
     }
 
 }
