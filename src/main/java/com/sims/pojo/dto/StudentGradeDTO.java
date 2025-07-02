@@ -9,4 +9,5 @@ public class StudentGradeDTO {
     private Integer credit;
     private String courseCategory;
     private String courseYear;
+    private String semester;
 }

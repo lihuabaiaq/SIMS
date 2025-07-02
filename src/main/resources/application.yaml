@@ -10,6 +10,19 @@ spring:
     username: simsuser
     password: simssql
 
+
+  data:
+    redis:
+      host: localhost
+      database: 2
+      port: 6379
+      lettuce:
+        pool:
+          max-active: 10
+          max-idle: 10
+          min-idle: 1
+          time-between-eviction-runs: 10s
+
 sims:
     jwt:
         secret-key: lihuabaiaq123456789987654321123456789

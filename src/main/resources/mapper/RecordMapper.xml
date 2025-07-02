@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.sims.mapper.RecordMapper">
+    <select id="getCourseRecord" resultType="com.sims.pojo.vo.StudentGradeVO">
+        select * from grade g join course c on g.course_id = c.course_id
+        where s.student_id = #{studentId}
+        <if test="semester != null">
+        and g.semester = #{semester}
+        </if>
+        order by g.updated_at;
+    </select>
+    <select id="getCompetitionRecord" resultType="com.sims.pojo.vo.CompetitionRecordVO">
+        select * from studentcompetition sc join competition c on sc.competition_id = c.competition_id
+        where sc.student_id = #{studentId}
+        <if test="startDate!=null and endDate!=null">
+        and c.end_date between #{startDate} and #{endDate}
+        </if>
+        order by sc.created_at;
+    </select>
+    <select id="getActivityRecord" resultType="com.sims.pojo.vo.ActivityRecordVO">
+        select * from studentactivity sa join activity a on sa.activity_id = a.activity_id
+        where sa.student_id = #{studentId}
+        <if test="startDate!=null and endDate!=null">
+            and a.end_time between #{startDate} and #{endDate}
+        </if>
+        order by sa.created_at;
+    </select>
+</mapper>

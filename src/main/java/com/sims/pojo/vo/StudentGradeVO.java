@@ -13,4 +13,5 @@ public class StudentGradeVO {
     private Integer finalGrade;
     private String gradePoint;
     private String comments;
+    private String semester;
 }
