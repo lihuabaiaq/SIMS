@@ -27,14 +27,17 @@ public class MvcConfiguration implements WebMvcConfigurer {
         registry.addInterceptor(jwtInterceptor)
                 .addPathPatterns("/**")
                 .excludePathPatterns(
-                        "/*/login",          // 登录接口
-                        "/**/*.html",         // 静态资源
-                        "/**/*.js",
-                        "/**/*.css",
-                        "/v3/api-docs/**",    // API文档
+                        "/**/login",
+                        "/doc.html",
+                        "/webjars/**",
+                        "/v3/api-docs/**",
                         "/swagger-ui/**",
-                        "/swagger-ui.html"
-                );
+                        "/swagger-ui.html",
+                        "/static/**",
+                        "/assets/**",
+                        "/css/**",
+                        "/js/**"
+                );;
     }
 
     @Override
@@ -46,5 +49,21 @@ public class MvcConfiguration implements WebMvcConfigurer {
                 .allowCredentials(true)
                 .maxAge(3600);
     }
+
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("/doc.html").addResourceLocations("classpath:/META-INF/resources/");
+        registry.addResourceHandler("/webjars/**").addResourceLocations("classpath:/META-INF/resources/webjars/");
+    }
+
+    @Bean
+    public OpenAPI customOpenAPI() {
+        return new OpenAPI()
+                .info(new Info()
+                        .title("SIMS 系统 API")
+                        .version("1.0")
+                        .description("学生信息管理系统 API 文档"));
+    }
+
 }
 

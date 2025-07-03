@@ -31,28 +31,28 @@ public class Grade implements Serializable {
      *
      */
 
-    private Long student_id;
+    private Long studentId;
     /**
      *
      */
 
-    private Long course_id;
+    private Long courseId;
     /**
      * 平时成绩
      */
-    private BigDecimal regular_grade;
+    private BigDecimal regularGrade;
     /**
      * 考试成绩
      */
-    private BigDecimal exam_grade;
+    private BigDecimal examGrade;
     /**
      * 最终成绩
      */
-    private BigDecimal final_grade;
+    private BigDecimal finalGrade;
     /**
      * 绩点
      */
-    private BigDecimal grade_point;
+    private BigDecimal gradePoint;
     /**
      * 学期
      */

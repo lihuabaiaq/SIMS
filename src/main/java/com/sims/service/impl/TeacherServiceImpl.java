@@ -17,12 +17,15 @@ import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> implements TeacherService {
@@ -34,7 +37,7 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
     @Resource
     RabbitTemplate rabbitTemplate;
     @Resource
-    StudentService studentService;
+    StringRedisTemplate stringRedisTemplate;
 
     @Override
     public Teacher teacherLogin(TeacherDTO teacherDTO) {
@@ -76,6 +79,7 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
             message.getMessageProperties().setDelayLong(time);
             return message;}
         );
+        stringRedisTemplate.opsForValue().set("course:fill:"+courseId, String.valueOf(0));
         rabbitTemplate.convertAndSend("delayExchange","course.register.end",courseId,message -> {
             Long time=ChronoUnit.MILLIS.between(LocalDateTime.now(),registerEnd);
             if(time<0)
@@ -96,7 +100,8 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
             key = {"course.register.start"}
     ))
     public void courseRegisterStart(Long courseId){
-        if(courseMapper.selectById(courseId).getStatus()!=0)
+        Course course = courseMapper.selectById(courseId);
+        if(course==null||course.getStatus()!=0)
             return;
         courseMapper.updateStatus(courseId,1);
     }
@@ -107,7 +112,10 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
             key = {"course.register.end"}
     ))
     public void courseRegisterEnd(Long courseId){
-        if(courseMapper.selectById(courseId).getStatus()!=1)
+        stringRedisTemplate.delete("course:fill:"+courseId);
+        stringRedisTemplate.delete("course:register:"+courseId);
+        Course course = courseMapper.selectById(courseId);
+        if(course==null||course.getStatus()!=1)
             return;
         courseMapper.updateStatus(courseId,2);
     }

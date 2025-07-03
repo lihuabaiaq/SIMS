@@ -6,6 +6,8 @@ import com.sims.pojo.entity.AVGScore;
 import com.sims.pojo.entity.Course;
 import com.sims.pojo.vo.StudentGradeVO;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
 
@@ -18,4 +20,10 @@ public interface CourseMapper extends BaseMapper<Course> {
     List<AVGScore> getStudentScore(Long studentId, List<String> semesters);
 
     List<AVGScore> getGradeScore(List<String> semesters, String grade);
+
+    @Update("update course set status = #{status} where course_id = #{courseId}")
+    void updateStatus(Long courseId, Integer status);
+
+    @Select("select * from course where teacher_id = #{teacherId}")
+    List<Course> getCourse(Long teacherId);
 }
