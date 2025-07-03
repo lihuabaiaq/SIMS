@@ -33,7 +33,7 @@ public class RecordServiceImpl implements RecordService {
         LocalDate endDate = null;
         if(semester!=null){
             String[] split=semester.split("-");
-            if(split[2]=="1") {
+            if(split[2].equals("1")) {
                 startDate = LocalDate.parse(split[0] + "-09-01");
                 endDate=LocalDate.parse(split[1] + "-03-01");
             }else {
@@ -52,7 +52,7 @@ public class RecordServiceImpl implements RecordService {
         LocalDateTime endDate = null;
         if(semester!=null){
             String[] split=semester.split("-");
-            if(split[2]=="1") {
+            if(split[2].equals("1")) {
                 startDate = LocalDate.parse(split[0] + "-09-01").atStartOfDay();
                 endDate=LocalDate.parse(split[1] + "-03-01").atStartOfDay();
             }else {

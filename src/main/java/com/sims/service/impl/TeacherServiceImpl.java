@@ -22,6 +22,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -51,18 +52,35 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
     }
 
     @Override
-    public void changeInfo(TeacherChangeDTO teacherChangeDTO) {
+    public void teachangeInfo(TeacherChangeDTO teacherChangeDTO) {
         Teacher teacher=query()
                 .eq("teacher_id",teacherChangeDTO.getTeacherId())
                 .one();
-        if(teacher==null || !teacher.getPassword().equals(MD5Util.encrypt(teacherChangeDTO.getOriginalPassword())))
+        if(teacher==null || !teacher.getPassword().equals(MD5Util.encrypt(teacherChangeDTO.getOriginPassword())))
             throw new RuntimeException("原密码错误,无法修改");
+        teacherChangeDTO.setChangePassword(MD5Util.encrypt(teacherChangeDTO.getChangePassword()));
         teacherMapper.updateInfo(teacherChangeDTO);
     }
 
     @Override
     @Transactional
     public void saveCourse(Course course) {
+        int currentMonth = LocalDate.now().getMonthValue();
+        if(currentMonth>8){
+            int smallYear = LocalDate.now().getYear();
+            int bigYear=LocalDate.now().getYear()+1;
+            course.setSemester(smallYear+"-"+bigYear+"-1");
+        }
+        else{
+            int smallYear = LocalDate.now().getYear()-1;
+            int bigYear=LocalDate.now().getYear();
+            if(LocalDate.now().getMonthValue()<3){
+                course.setSemester(smallYear+"-"+bigYear+"-1");
+            }
+            else{
+                course.setSemester(smallYear+"-"+bigYear+"-2");
+            }
+        }
         Long teacherId = UserHolder.getId();
         course.setTeacherId(teacherId);
         course.setStatus(0);

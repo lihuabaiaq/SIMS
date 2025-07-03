@@ -3,7 +3,7 @@
 <mapper namespace="com.sims.mapper.RecordMapper">
     <select id="getCourseRecord" resultType="com.sims.pojo.vo.StudentGradeVO">
         select * from grade g join course c on g.course_id = c.course_id
-        where s.student_id = #{studentId}
+        where g.student_id = #{studentId}
         <if test="semester != null">
         and g.semester = #{semester}
         </if>

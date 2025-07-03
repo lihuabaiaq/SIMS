@@ -47,7 +47,7 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
     }
 
     @Override
-    public void changeInfo(StudentChangeDTO studentChangeDTO) {
+    public void stuchangeInfo(StudentChangeDTO studentChangeDTO) {
         System.out.println(studentChangeDTO);
         Student student=query()
                 .eq("student_id",studentChangeDTO.getStudentId())
@@ -70,24 +70,23 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
 
     @Override
     public ScoreAVGVO studyanalyze(Long studentId, String startsemester,String endsemester) {
-        System.out.println("--- 3. 已进入 StudentServiceImpl 的 studyanalyze 方法 ---");
         String grade=studentId.toString().substring(0,4);
         ScoreAVGVO scoreAVGVO = new ScoreAVGVO();
         List<String>semesters=new ArrayList<>();
         String[] start = startsemester.split("-");
         String[] end = endsemester.split("-");
         semesters.add(startsemester);
-        if(startsemester!=endsemester){
-            if(start[2]=="1"){
+        while(!startsemester.equals(endsemester)){
+            if(start[2].equals("1")){
                 start[2]="2";
                 startsemester=String.join("-",start);
                 semesters.add(startsemester);
             }
-            else if(start[2]=="2"){
+            else if(start[2].equals("2")){
                 start[0]=String.valueOf(Integer.parseInt(start[0])+1);
                 start[1]=String.valueOf(Integer.parseInt(start[0])+1);
                 start[2]="1";
-                startsemester=String.join("-",end);
+                startsemester=String.join("-",start);
                 semesters.add(startsemester);
             }
         }

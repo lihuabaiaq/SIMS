@@ -24,7 +24,7 @@ public class TeacherController {
     @Resource
     JwtConfiguration jwtConfiguration;
 
-    @PostMapping("/teacher")
+    @PostMapping("/login")
     public Result<TeacherLoginVO> teacherLogin(@RequestBody TeacherDTO teacherDTO){
         Teacher teacher = teacherService.teacherLogin(teacherDTO);
         Map<String, Object> claims = new HashMap<>();
@@ -36,9 +36,9 @@ public class TeacherController {
         return Result.ok(teacherLoginVO);
     }
 
-    @PostMapping("/changeInfo")
+    @PatchMapping("/changeInfo")
     public Result<Void> changeInfo(@RequestBody TeacherChangeDTO teacherChangeDTO){
-        teacherService.changeInfo(teacherChangeDTO);
+        teacherService.teachangeInfo(teacherChangeDTO);
         return Result.ok();
     }
 
@@ -49,7 +49,7 @@ public class TeacherController {
     }
 
     @GetMapping("/getcourse")
-    public Result<List<Course>> getCourse(Long teacherId){
+    public Result<List<Course>> getCourse(@RequestParam Long teacherId){
        return Result.ok(teacherService.getCourse(teacherId));
     }
 

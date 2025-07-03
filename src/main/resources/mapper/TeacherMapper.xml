@@ -2,11 +2,12 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.sims.mapper.TeacherMapper">
     <update id="updateInfo">
-        update teacher <set>
-        <if test="phone != null">phone = #{phone}</if>
-        <if test="email != null">email = #{email}</if>
-        <if test="changePassword != null">password = #{changePassword}</if>
+        update teacher
+        <set>
+            <if test="phone != null and phone != ''">phone = #{phone},</if>
+            <if test="email != null and email != ''">email = #{email},</if>
+            <if test="changePassword != null and changePassword != ''">password = #{changePassword},</if>
+        </set>
         where teacher_id = #{teacherId}
-    </set>
     </update>
 </mapper>

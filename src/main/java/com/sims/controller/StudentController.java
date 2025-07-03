@@ -43,9 +43,9 @@ public class StudentController {
         return Result.ok(studentLoginVO);
     }
 
-    @PatchMapping("/changeinfo")
+    @PatchMapping("/changeInfo")
     private Result<Void> changeInfo(@RequestBody StudentChangeDTO studentChangeDTO){
-        studentService.changeInfo(studentChangeDTO);
+        studentService.stuchangeInfo(studentChangeDTO);
         return Result.ok();
     }
 

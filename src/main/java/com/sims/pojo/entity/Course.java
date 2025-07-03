@@ -9,6 +9,8 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -24,6 +26,7 @@ import org.hibernate.validator.constraints.Length;
 public class Course implements Serializable {
 
     @NotNull(message="[]不能为空")
+    @TableId(type = IdType.AUTO)
     private Long courseId;
 
     @NotBlank(message="[]不能为空")

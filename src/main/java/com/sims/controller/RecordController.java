@@ -15,7 +15,7 @@ import java.util.List;
 public class RecordController {
     @Resource
     private RecordService recordService;
-
+//先调用studentController里面的getAvailableSemester创建下拉列表
     @GetMapping("/course/{id}")
     public Result<List<StudentGradeVO>> getCourseRecord(@PathVariable(value = "id") Long studentId,
                                                         @RequestParam String semester) {
