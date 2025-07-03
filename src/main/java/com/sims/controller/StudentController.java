@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/student")
@@ -60,8 +61,14 @@ public class StudentController {
         return Result.ok(grade);
     }
 
-    @GetMapping("/studyanalyze")
-    public Result<ScoreAVGVO> studyanalyze(@RequestParam Long studentId){
-        return Result.ok(studentService.studyanalyze(studentId));
+    @GetMapping("/studentanalyze/getavailable")
+    private Result<List> getAvailableSemester(@RequestParam Long studentId){
+        return Result.ok(studentService.getAvailableSemester(studentId));
+    }
+
+    @GetMapping("/studentanalyze/getcomparsion")//前端要确保两个学期的相对顺序，格式为2022-2023-1
+    public Result<ScoreAVGVO> studyanalyze(@RequestParam Long studentId,String startsemester,String endsemester){
+        ScoreAVGVO scoreAVGVO = studentService.studyanalyze(studentId,startsemester,endsemester);
+        return Result.ok(scoreAVGVO);
     }
 }

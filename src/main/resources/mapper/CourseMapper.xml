@@ -20,10 +20,49 @@
         </where>
     </select>
 
-    <select id="getAVGScoreAsCategory" resultType="com.sims.pojo.entity.AVGScore">
-        select c.category courseCategory,avg(g.final_grade) avgScore
+    <select id="getStudentScore" resultType="com.sims.pojo.entity.AVGScore">
+        select c.category courseCategory,sum(g.final_grade * c.credit)/sum(c.credit) avgScore
         from course c left join grade g on c.course_id = g.course_id
-        where g.student_id = #{studentId}
+        <where>
+            and g.student_id = #{studentId}
+            <if test="semesters!= null">
+                and c.semester in
+                <foreach collection="semesters" item="semester" open="(" separator="," close=")">
+                    #{semester}
+                </foreach>
+            </if>
+        </where>
         group by c.category
+        order by case
+            when c.category = '数学' then 1
+            when c.category = '计算机' then 2
+            when c.category = '电子信息' then 3
+            when c.category = '自然基础学科' then 4
+            when c.category = '思想道德' then 5
+            when c.category = '体育' then 6
+        end
+    </select>
+
+    <select id="getGradeScore" resultType="com.sims.pojo.entity.AVGScore">
+        select c.category courseCategory,sum(g.final_grade * c.credit)/sum(c.credit) avgScore
+        from course c left join grade g on c.course_id = g.course_id
+        <where>
+            and g.student_id like concat(#{grade},'%')
+            <if test="semesters!= null">
+                and c.semester in
+                <foreach collection="semesters" item="semester" open="(" separator="," close=")">
+                    #{semester}
+                </foreach>
+            </if>
+        </where>
+        group by c.category
+        order by case
+            when c.category = '数学' then 1
+            when c.category = '计算机' then 2
+            when c.category = '电子信息' then 3
+            when c.category = '自然基础学科' then 4
+            when c.category = '思想道德' then 5
+            when c.category = '体育' then 6
+        end
     </select>
 </mapper>

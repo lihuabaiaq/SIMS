@@ -15,5 +15,7 @@ public interface CourseMapper extends BaseMapper<Course> {
 
     List<StudentGradeVO> select(StudentGradeDTO studentGradeDTO);
 
-    List<AVGScore> getAVGScoreAsCategory(Long studentId);
+    List<AVGScore> getStudentScore(Long studentId, List<String> semesters);
+
+    List<AVGScore> getGradeScore(List<String> semesters, String grade);
 }

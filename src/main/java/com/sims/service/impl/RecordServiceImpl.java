@@ -7,11 +7,13 @@ import com.sims.pojo.vo.CompetitionRecordVO;
 import com.sims.pojo.vo.StudentGradeVO;
 import com.sims.service.RecordService;
 import jakarta.annotation.Resource;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Service
 public class RecordServiceImpl implements RecordService {
     @Resource
     private RecordMapper recordMapper;

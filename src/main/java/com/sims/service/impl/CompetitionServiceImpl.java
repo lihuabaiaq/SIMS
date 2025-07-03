@@ -44,7 +44,7 @@ public class CompetitionServiceImpl extends ServiceImpl<CompetitionMapper, Compe
     @Transactional
     public List<CompetitionVO> competitionRecommend(CompetitionDTO competitionDTO) {
         Long studentId = competitionDTO.getStudentId();
-        List<AVGScore> avgScores = courseMapper.getAVGScoreAsCategory(studentId);
+        List<AVGScore> avgScores = courseMapper.getStudentScore(studentId, null);
         if(avgScores.isEmpty())
             throw new RuntimeException("学号错误，没有成绩");
         Map<String, Double> avgScoreMap = avgScores.stream()

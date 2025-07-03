@@ -7,6 +7,7 @@ import com.sims.mapper.StudentMapper;
 import com.sims.pojo.dto.StudentChangeDTO;
 import com.sims.pojo.dto.StudentDTO;
 import com.sims.pojo.dto.StudentGradeDTO;
+import com.sims.pojo.entity.AVGScore;
 import com.sims.pojo.entity.Student;
 import com.sims.pojo.vo.ScoreAVGVO;
 import com.sims.pojo.vo.StudentGradeVO;
@@ -16,6 +17,8 @@ import io.lettuce.core.ScriptOutputType;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,17 +65,61 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
 
     @Override
     public List<StudentGradeVO> select(StudentGradeDTO studentGradeDTO) {
-        System.out.println("1111");
         return courseMapper.select(studentGradeDTO);
     }
 
     @Override
-    public ScoreAVGVO studyanalyze(Long studentId) {
+    public ScoreAVGVO studyanalyze(Long studentId, String startsemester,String endsemester) {
+        System.out.println("--- 3. 已进入 StudentServiceImpl 的 studyanalyze 方法 ---");
+        String grade=studentId.toString().substring(0,4);
         ScoreAVGVO scoreAVGVO = new ScoreAVGVO();
-        scoreAVGVO.setStudentScoreList(studentMapper.getAVGScore(studentId));
-        scoreAVGVO.setAverageScoreList(studentMapper.getAVGScore(null));
-        return scoreAVGVO;
+        List<String>semesters=new ArrayList<>();
+        String[] start = startsemester.split("-");
+        String[] end = endsemester.split("-");
+        semesters.add(startsemester);
+        if(startsemester!=endsemester){
+            if(start[2]=="1"){
+                start[2]="2";
+                startsemester=String.join("-",start);
+                semesters.add(startsemester);
+            }
+            else if(start[2]=="2"){
+                start[0]=String.valueOf(Integer.parseInt(start[0])+1);
+                start[1]=String.valueOf(Integer.parseInt(start[0])+1);
+                start[2]="1";
+                startsemester=String.join("-",end);
+                semesters.add(startsemester);
+            }
+        }
+            List<AVGScore> studentAllScoreList=courseMapper.getStudentScore(studentId,semesters);
+            List<AVGScore> avgAllScoreList=courseMapper.getGradeScore(semesters,grade);
+            ScoreAVGVO scoreAVGVO1=new ScoreAVGVO();
+            scoreAVGVO1.setStudentScoreList(studentAllScoreList);
+            scoreAVGVO1.setAverageScoreList(avgAllScoreList);
+        return scoreAVGVO1;
     }
 
-
+    @Override
+    public List<String> getAvailableSemester(Long studentId) {
+        List<String> semesters = new ArrayList<>();
+        String admissionDate=studentMapper.getInfo(studentId);
+        int startYear = Integer.parseInt(admissionDate.substring(0, 4));
+        int endYear = startYear + 1;
+        int semesterNumber =1;
+        LocalDate currentDate = LocalDate.now();
+        LocalDate startDate = LocalDate.of(startYear, 9, 1); // 第一学期开始日期
+        while (!startDate.isAfter(currentDate)) {
+            String semester = String.format("%d-%d-%d", startDate.getYear(), startDate.getYear() + 1, semesterNumber);
+            semesters.add(semester);
+            // 更新到下一学期
+            if (semesterNumber == 1) {
+                startDate = LocalDate.of(startDate.getYear(), 3, 1); // 第二学期开始日期
+                semesterNumber = 2;
+            } else {
+                startDate = LocalDate.of(startDate.getYear() + 1, 9, 1); // 下一年第一学期开始日期
+                semesterNumber = 1;
+            }
+        }
+        return semesters;
+    }
 }

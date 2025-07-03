@@ -23,5 +23,7 @@ public interface StudentService extends IService<Student> {
 
     List<StudentGradeVO> select(StudentGradeDTO studentGradeDTO);
 
-    ScoreAVGVO studyanalyze(Long studentId);
+    ScoreAVGVO studyanalyze(Long studentId,String startsemester,String endsemester);
+
+    List<String> getAvailableSemester(Long studentId);
 }

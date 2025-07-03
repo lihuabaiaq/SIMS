@@ -46,7 +46,7 @@ public class JobServiceImpl extends ServiceImpl<JobMapper, Job> implements JobSe
                     .map(jobVO -> JSONObject.parseObject(jobVO, JobVO.class))
                     .collect(Collectors.toList());
         }
-        Map<String, Double> scoreMap = courseMapper.getAVGScoreAsCategory(studentId)
+        Map<String, Double> scoreMap = courseMapper.getStudentScore(studentId,null)
                 .stream().collect(Collectors.toMap(AVGScore::getCourseCategory, AVGScore::getAvgScore));
         Map<String, List<CompetitionAward>> competitionMap = competitionMapper.getCompetitionAward(studentId)
                 .stream().collect(Collectors.groupingBy(CompetitionAward::getCategory));
