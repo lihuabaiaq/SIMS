@@ -7,6 +7,6 @@ public class TeacherChangeDTO {
     private String phone;
     private String email;
     private Long teacherId;
-    private String originalPassword;
+    private String originPassword;
     private String changePassword;
 }

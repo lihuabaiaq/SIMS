@@ -13,7 +13,7 @@ import java.util.List;
 public interface TeacherService extends IService<Teacher> {
     Teacher teacherLogin(TeacherDTO teacherDTO);
 
-    void changeInfo(TeacherChangeDTO teacherChangeDTO);
+    void teachangeInfo(TeacherChangeDTO teacherChangeDTO);
 
     void saveCourse(Course course);
 

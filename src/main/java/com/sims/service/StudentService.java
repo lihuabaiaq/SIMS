@@ -17,7 +17,7 @@ public interface StudentService extends IService<Student> {
     Student studentLogin(StudentDTO studentDTO);
 
 
-    void changeInfo(StudentChangeDTO studentChangeDTO);
+    void stuchangeInfo(StudentChangeDTO studentChangeDTO);
 
     List<StudentGradeVO> getGrade(Long studentId);
 
