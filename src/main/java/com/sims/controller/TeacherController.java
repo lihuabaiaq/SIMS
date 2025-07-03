@@ -3,8 +3,8 @@ package com.sims.controller;
 import com.sims.config.JwtConfiguration;
 import com.sims.pojo.dto.TeacherChangeDTO;
 import com.sims.pojo.dto.TeacherDTO;
+import com.sims.pojo.entity.Course;
 import com.sims.pojo.entity.Teacher;
-import com.sims.pojo.vo.ScoreAVGVO;
 import com.sims.pojo.vo.TeacherLoginVO;
 import com.sims.service.TeacherService;
 import com.sims.util.JwtUtil;
@@ -13,6 +13,7 @@ import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -39,6 +40,17 @@ public class TeacherController {
     public Result<Void> changeInfo(@RequestBody TeacherChangeDTO teacherChangeDTO){
         teacherService.changeInfo(teacherChangeDTO);
         return Result.ok();
+    }
+
+    @PostMapping("/addcourse")
+    public Result<Void> addCourse(@RequestBody Course course){
+        teacherService.saveCourse(course);
+        return Result.ok();
+    }
+
+    @GetMapping("/getcourse")
+    public Result<List<Course>> getCourse(Long teacherId){
+       return Result.ok(teacherService.getCourse(teacherId));
     }
 
 

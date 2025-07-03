@@ -23,6 +23,16 @@ spring:
           min-idle: 1
           time-between-eviction-runs: 10s
 
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    virtual-host: /sims
+    listener:
+      simple:
+        prefetch: 1
+
 sims:
     jwt:
         secret-key: lihuabaiaq123456789987654321123456789
