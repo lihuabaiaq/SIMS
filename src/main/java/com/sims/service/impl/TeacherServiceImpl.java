@@ -130,8 +130,8 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
             key = {"course.register.end"}
     ))
     public void courseRegisterEnd(Long courseId){
-        stringRedisTemplate.delete("course:fill:"+courseId);
-        stringRedisTemplate.delete("course:register:"+courseId);
+        stringRedisTemplate.delete("course:fill:"+courseId.toString());
+        stringRedisTemplate.delete("course:register:"+courseId.toString());
         Course course = courseMapper.selectById(courseId);
         if(course==null||course.getStatus()!=1)
             return;

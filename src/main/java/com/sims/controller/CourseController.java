@@ -24,13 +24,13 @@ public class CourseController {
     }
 
     @PostMapping("/register")
-    public Result<Void> registerCourse(@RequestBody Long courseId) {
+    public Result<Void> registerCourse(@RequestParam Long courseId) {
         courseService.registerCourse(courseId);
         return Result.ok();
     }
 
     @DeleteMapping("/delete")
-    public Result<Void> deleteCourse(@RequestBody Long courseId) {
+    public Result<Void> deleteCourse(@RequestParam Long courseId) {
         courseService.deleteCourse(courseId);
         return Result.ok();
     }

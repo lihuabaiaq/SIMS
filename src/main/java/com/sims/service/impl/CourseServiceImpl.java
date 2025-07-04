@@ -42,8 +42,8 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
 
     @Override
     public List<Course> getCourseList(Long studentId) {
-        String gender = studentService.getById(studentId).getGender();
-        return this.query().eq("grade_requirement",gender)
+        String grade = studentService.getById(studentId).getGrade();
+        return this.query().eq("grade_requirement",grade)
                 .eq("status",1).list();
     }
 
@@ -63,20 +63,21 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
                         "redis.call('SADD', KEYS[2], ARGV[2])\n" +
                         "return 0";
 
-        DefaultRedisScript<Integer> script = new DefaultRedisScript<>();
+        DefaultRedisScript<Long> script = new DefaultRedisScript<>();
         script.setScriptText(luaScript);
-        script.setResultType(Integer.class);
+        script.setResultType(Long.class);
 
-        Integer result = stringRedisTemplate.execute(script,
+        String result = stringRedisTemplate.execute(script,
                 Arrays.asList(
-                        "course:fill:" + courseId,
-                        "course:register:" + courseId
+                        "course:fill:" + courseId.toString(),
+                        "course:register:" + courseId.toString()
                 ),
                 max.toString(), // ARGV[1]
                 studentId.toString() // ARGV[2]
-        );
+        ).toString();
+        Integer i = Integer.valueOf(result);
 
-        switch (result) {
+        switch (i) {
             case 1:
                 throw new RuntimeException("选课人数已满");
             case 2:
@@ -94,8 +95,8 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
     @Transactional
     public void deleteCourse(Long courseId) {
         Long studentId = UserHolder.getId();
-        stringRedisTemplate.opsForSet().remove("course:register"+courseId,studentId);
-        stringRedisTemplate.delete("course:registered:" + courseId + ":" + studentId);
+        stringRedisTemplate.opsForSet().remove("course:register:"+courseId,studentId.toString());
+        stringRedisTemplate.delete("course:registered:" + courseId+ ":" + studentId);
         gradeMapper.delete(new LambdaQueryWrapper<Grade>()
                 .eq(Grade::getStudentId,studentId)
                 .eq(Grade::getCourseId,courseId));
