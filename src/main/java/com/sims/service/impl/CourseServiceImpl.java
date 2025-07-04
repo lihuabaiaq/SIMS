@@ -11,6 +11,9 @@ import com.sims.service.StudentService;
 import com.sims.util.UserHolder;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.BooleanUtils;
+
+import org.apache.ibatis.annotations.Param;
 import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;
@@ -38,19 +41,39 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
     @Resource
     RabbitTemplate rabbitTemplate;
 
-
-
-    @Override
-    public List<Course> getCourseList(Long studentId) {
+    public List<Course> getHavingList(@Param("studentId") Long studentId) {
         String grade = studentService.getById(studentId).getGrade();
         return this.query().eq("grade_requirement",grade)
-                .eq("status",1).list();
+                .eq("status",1)
+                .notExists("select 1 from grade where grade.course_id = course.course_id and grade.student_id ="+studentId)
+                .list();
+    }
+
+    @Override
+    public List<Course> getHadList(@Param("studentId") Long studentId) {
+        String grade = studentService.getById(studentId).getGrade();
+        return this.query().eq("grade_requirement",grade)
+                .eq("status",1)
+                .exists("select 1 from grade where grade.course_id = course.course_id and grade.student_id ="+studentId)
+                .list();
+    }
+
+    @Override
+    public List<Course> getBeHavingList(Long studentId) {
+        String grade = studentService.getById(studentId).getGrade();
+        return this.query().eq("grade_requirement",grade)
+                .eq("status",0)
+                .list();
     }
 
     @Override
     public void registerCourse(Long courseId) {
-        Long studentId = UserHolder.getId();
         Course course=this.getById(courseId);
+        if(course== null)
+            throw new RuntimeException("没有该课程");
+        if(course.getStatus()!=1)
+            throw new RuntimeException("该课程尚未开放选课");
+        Long studentId = UserHolder.getId();
         Integer max = course.getMaxStudents();
         String luaScript =
                 "if tonumber(redis.call('GET', KEYS[1])) >= tonumber(ARGV[1]) then\n" +
@@ -95,6 +118,8 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
     @Transactional
     public void deleteCourse(Long courseId) {
         Long studentId = UserHolder.getId();
+        if(BooleanUtils.isFalse(stringRedisTemplate.opsForSet().isMember("course:register:" + courseId, studentId.toString())))
+            throw new RuntimeException("尚未选择该课程");
         stringRedisTemplate.opsForSet().remove("course:register:"+courseId,studentId.toString());
         stringRedisTemplate.delete("course:registered:" + courseId+ ":" + studentId);
         gradeMapper.delete(new LambdaQueryWrapper<Grade>()
@@ -103,6 +128,8 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         this.update().setSql("current_students = current_students - 1")
                 .eq("course_id",courseId).update();
     }
+
+
 
     @Transactional
     @RabbitListener(bindings = @QueueBinding(value = @Queue(value = "course.regiest.queue"),

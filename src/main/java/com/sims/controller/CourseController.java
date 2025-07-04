@@ -3,7 +3,6 @@ package com.sims.controller;
 import com.sims.pojo.entity.Course;
 import com.sims.service.CourseService;
 import com.sims.util.Result;
-import io.swagger.v3.oas.annotations.Operation;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,10 +16,19 @@ public class CourseController {
     @Resource
     private CourseService courseService;
 
-    @GetMapping("/list")
-    @Operation(summary = "获取课程列表")
-    public Result<List<Course>> getCourseList(@RequestParam Long studentId) {
-        return Result.ok(courseService.getCourseList(studentId));
+    @GetMapping("/list/having")
+    public Result<List<Course>> getHavingList(@RequestParam Long studentId) {
+        return Result.ok(courseService.getHavingList(studentId));
+    }
+
+    @GetMapping("/list/had")
+    public Result<List<Course>> getHadList(@RequestParam Long studentId) {
+        return Result.ok(courseService.getHadList(studentId));
+    }
+
+    @GetMapping("/list/behaving")
+    public Result<List<Course>> getBehavingList(@RequestParam Long studentId) {
+        return Result.ok(courseService.getBeHavingList(studentId));
     }
 
     @PostMapping("/register")

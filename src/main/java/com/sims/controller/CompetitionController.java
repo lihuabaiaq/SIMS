@@ -31,5 +31,4 @@ public class CompetitionController {
     public Result<List<Competition>> getAllcompetition(){
         return Result.ok(competitionService.getALl());
     }
-
 }
