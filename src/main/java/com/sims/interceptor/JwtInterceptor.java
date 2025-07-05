@@ -36,9 +36,19 @@ public class JwtInterceptor implements HandlerInterceptor {
         }
 
         String token = request.getHeader(jwtConfiguration.getTokenName());
-        String[] s = token.split(" ", 2);
-        token=s[1];
-        //模拟 Spring Security 这样的专业安全框架，进行token解析前的预处理
+        if (token == null || token.isEmpty()) {
+            token = request.getParameter("token");
+        }
+        if (token.startsWith("Bearer ")) {
+            // 如果是从请求头获取的，就截取 "Bearer " 后面的部分
+            System.out.println(token);
+            System.out.println("34235234");
+            token = token.substring(7);
+            //模拟 Spring Security 这样的专业安全框架，进行token解析前的预处理
+        } else {
+            // 2. 如果请求头没有，就直接从URL参数获取原始token
+        }
+
         if (token==null||token.isEmpty()){
             response.setStatus(401);
             System.out.println("token失效，不放行");
