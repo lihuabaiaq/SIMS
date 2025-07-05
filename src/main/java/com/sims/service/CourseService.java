@@ -10,7 +10,11 @@ public interface CourseService extends IService<Course> {
 
     void registerCourse(Long courseId);
 
-    List<Course> getCourseList(Long studentId);
-
     void deleteCourse(Long courseId);
+
+    List<Course> getHavingList(Long studentId);
+
+    List<Course> getHadList(Long studentId);
+
+    List<Course> getBeHavingList(Long studentId);
 }
