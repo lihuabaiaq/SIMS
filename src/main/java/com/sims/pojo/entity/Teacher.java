@@ -8,6 +8,7 @@ import java.io.Serializable;
 
 import java.util.Date;
 
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -28,6 +29,7 @@ public class Teacher implements Serializable {
     * 
     */
     @NotNull(message="[]不能为空")
+    @TableId
     private Long teacherId;
     /**
     * 

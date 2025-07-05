@@ -8,6 +8,7 @@ import java.io.Serializable;
 
 import java.util.Date;
 
+import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -26,7 +27,7 @@ public class Competition implements Serializable {
     * 
     */
     @NotNull(message="[]不能为空")
-    
+    @TableId
     private Long competitionId;
     /**
     * 
