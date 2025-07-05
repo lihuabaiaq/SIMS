@@ -23,7 +23,8 @@
         select c.category courseCategory,sum(g.final_grade * c.credit)/sum(c.credit) avgScore
         from course c left join grade g on c.course_id = g.course_id
         <where>
-            and g.student_id = #{studentId}
+            g.student_id = #{studentId}
+            and g.final_grade IS NOT NULL
             <if test="semesters!= null">
                 and c.semester in
                 <foreach collection="semesters" item="semester" open="(" separator="," close=")">
@@ -46,7 +47,8 @@
         select c.category courseCategory,sum(g.final_grade * c.credit)/sum(c.credit) avgScore
         from course c left join grade g on c.course_id = g.course_id
         <where>
-            and g.student_id like concat(#{grade},'%')
+            g.student_id like concat(#{grade},'%')
+            and g.final_grade IS NOT NULL
             <if test="semesters!= null">
                 and c.semester in
                 <foreach collection="semesters" item="semester" open="(" separator="," close=")">
@@ -64,4 +66,22 @@
             when c.category = '体育' then 6
         end
     </select>
+    <select id="getHavingList" resultType="com.sims.pojo.vo.CourseVO">
+        select c.*,t.name teacherName from course c left join teacher t on c.teacher_id = t.teacher_id
+        where c.grade_requirement=#{grade}
+          and c.status = 1
+        and not exists(select 1 from grade where grade.course_id = c.course_id and grade.student_id =#{studentId})
+    </select>
+    <select id="getHadList" resultType="com.sims.pojo.vo.CourseVO">
+        select c.*,t.name teacherName from course c left join teacher t on c.teacher_id = t.teacher_id
+        where c.grade_requirement=#{grade}
+          and c.status = 1
+          and  exists(select 1 from grade where grade.course_id = c.course_id and grade.student_id =#{studentId})
+    </select>
+    <select id="getbeHavingList" resultType="com.sims.pojo.vo.CourseVO">
+        select c.*,t.name teacherName from course c left join teacher t on c.teacher_id = t.teacher_id
+        where c.grade_requirement=#{grade}
+          and c.status = 0
+    </select>
+
 </mapper>

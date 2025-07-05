@@ -1,6 +1,6 @@
 package com.sims.controller;
 
-import com.sims.pojo.entity.Course;
+import com.sims.pojo.vo.CourseVO;
 import com.sims.service.CourseService;
 import com.sims.util.Result;
 import jakarta.annotation.Resource;
@@ -17,17 +17,17 @@ public class CourseController {
     private CourseService courseService;
 
     @GetMapping("/list/having")
-    public Result<List<Course>> getHavingList(@RequestParam Long studentId) {
+    public Result<List<CourseVO>> getHavingList(@RequestParam Long studentId) {
         return Result.ok(courseService.getHavingList(studentId));
     }
 
     @GetMapping("/list/had")
-    public Result<List<Course>> getHadList(@RequestParam Long studentId) {
+    public Result<List<CourseVO>> getHadList(@RequestParam Long studentId) {
         return Result.ok(courseService.getHadList(studentId));
     }
 
     @GetMapping("/list/behaving")
-    public Result<List<Course>> getBehavingList(@RequestParam Long studentId) {
+    public Result<List<CourseVO>> getBehavingList(@RequestParam Long studentId) {
         return Result.ok(courseService.getBeHavingList(studentId));
     }
 

@@ -8,4 +8,6 @@ import java.util.List;
 
 public interface JobService extends IService<Job> {
     List<JobVO> JobRecommend(Long studentId);
+
+    void refresh();
 }

@@ -2,12 +2,14 @@ package com.sims.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sims.mapper.CourseMapper;
+import com.sims.mapper.GradeMapper;
 import com.sims.mapper.TeacherMapper;
+import com.sims.pojo.dto.ScoreDTO;
 import com.sims.pojo.dto.TeacherChangeDTO;
 import com.sims.pojo.dto.TeacherDTO;
 import com.sims.pojo.entity.Course;
 import com.sims.pojo.entity.Teacher;
-import com.sims.service.StudentService;
+import com.sims.service.CourseService;
 import com.sims.service.TeacherService;
 import com.sims.util.MD5Util;
 import com.sims.util.UserHolder;
@@ -17,7 +19,7 @@ import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,7 +28,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Objects;
+
 
 @Service
 public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> implements TeacherService {
@@ -36,9 +38,13 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
     @Resource
     CourseMapper courseMapper;
     @Resource
+    CourseService courseService;
+    @Resource
     RabbitTemplate rabbitTemplate;
     @Resource
     StringRedisTemplate stringRedisTemplate;
+    @Autowired
+    private GradeMapper gradeMapper;
 
     @Override
     public Teacher teacherLogin(TeacherDTO teacherDTO) {
@@ -109,7 +115,13 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
 
     @Override
     public List<Course> getCourse(Long teacherId) {
-        return courseMapper.getCourse(teacherId);
+        return courseService.lambdaQuery().eq(Course::getTeacherId,teacherId).list();
+    }
+
+    @Override
+    public void updateScores(List<ScoreDTO> scoreList) {
+        scoreList.forEach(scoreDTO -> scoreDTO.setGradePoint((scoreDTO.getFinalGrade() - 50) / 10));
+        gradeMapper.updateScores(scoreList);
     }
 
     @RabbitListener(bindings = @QueueBinding(
@@ -121,7 +133,7 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
         Course course = courseMapper.selectById(courseId);
         if(course==null||course.getStatus()!=0)
             return;
-        courseMapper.updateStatus(courseId,1);
+        courseService.update().set("status",1).eq("course_id",courseId).update();
     }
 
     @RabbitListener(bindings = @QueueBinding(
@@ -135,6 +147,6 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
         Course course = courseMapper.selectById(courseId);
         if(course==null||course.getStatus()!=1)
             return;
-        courseMapper.updateStatus(courseId,2);
+        courseService.update().set("status",1).eq("course_id",courseId).update();
     }
 }

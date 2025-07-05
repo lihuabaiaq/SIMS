@@ -1,6 +1,7 @@
 package com.sims.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.sims.pojo.dto.ScoreDTO;
 import com.sims.pojo.dto.TeacherChangeDTO;
 import com.sims.pojo.dto.TeacherDTO;
 import com.sims.pojo.entity.Course;
@@ -18,4 +19,6 @@ public interface TeacherService extends IService<Teacher> {
     void saveCourse(Course course);
 
     List<Course> getCourse(Long teacherId);
+
+    void updateScores(List<ScoreDTO> scoreList);
 }

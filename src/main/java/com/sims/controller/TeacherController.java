@@ -1,6 +1,7 @@
 package com.sims.controller;
 
 import com.sims.config.JwtConfiguration;
+import com.sims.pojo.dto.ScoreDTO;
 import com.sims.pojo.dto.TeacherChangeDTO;
 import com.sims.pojo.dto.TeacherDTO;
 import com.sims.pojo.entity.Course;
@@ -53,5 +54,10 @@ public class TeacherController {
        return Result.ok(teacherService.getCourse(teacherId));
     }
 
+    @PutMapping("/scores")
+    public Result<Void> updateScores(@RequestBody List<ScoreDTO> scoreList){
+        teacherService.updateScores(scoreList);
+        return Result.ok();
+    }
 
 }

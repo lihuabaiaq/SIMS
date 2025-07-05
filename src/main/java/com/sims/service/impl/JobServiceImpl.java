@@ -7,6 +7,7 @@ import com.sims.pojo.entity.*;
 import com.sims.pojo.vo.JobVO;
 import com.sims.service.JobService;
 import com.sims.util.AwardScoreUtil;
+import com.sims.util.UserHolder;
 import jakarta.annotation.Resource;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +42,7 @@ public class JobServiceImpl extends ServiceImpl<JobMapper, Job> implements JobSe
     public List<JobVO> JobRecommend(Long studentId) {
         String jobKey = "job:commend:" + studentId;
         Set<String> redisJobVOS = stringRedisTemplate.opsForZSet().reverseRange(jobKey, 0, 5);
-        if (!redisJobVOS.isEmpty()) {
+        if (redisJobVOS != null && !redisJobVOS.isEmpty()) {
             return redisJobVOS.stream()
                     .map(jobVO -> JSONObject.parseObject(jobVO, JobVO.class))
                     .collect(Collectors.toList());
@@ -90,7 +91,6 @@ public class JobServiceImpl extends ServiceImpl<JobMapper, Job> implements JobSe
             jobVO.setReason(stringBuilder.toString());
             jobVO.setScore(score);
             stringRedisTemplate.opsForZSet().add(jobKey, JSONObject.toJSONString(jobVO), score);
-            System.out.println("存储在redis里面");
         });
         try {
             Set<String> JobVOS = stringRedisTemplate.opsForZSet().reverseRange(jobKey, 0, 5);
@@ -100,6 +100,12 @@ public class JobServiceImpl extends ServiceImpl<JobMapper, Job> implements JobSe
         } catch (Exception e) {
             throw new RuntimeException("数据库错误");
         }
+    }
+
+    @Override
+    public void refresh() {
+        Long studentId = UserHolder.getId();
+        stringRedisTemplate.delete("job:commend:" + studentId);
     }
 
 }
