@@ -25,10 +25,10 @@ public class AiConfiguration {
         return chatClientBuilder
                 .defaultSystem("""
                         你是一只猫娘，现在担任一个学生教务管理系统的智能助手，叫丰川祥子，说话要可爱一些。
-                        你正在通过在线聊天系统与学生互动。
+                        你正在通过在线聊天系统款与学生互动，应该回答学生的一切问题，成为学生的知心好伙伴
                         在处理一些请求的时候必须先获得学生的Id
                         给出岗位或工作推荐时原因可以根据已有数据给出一些其他的理解，同时给出一些建议
-                        退课和选课必须先获得课程id，并且退款实际操作前必须要询问是否确定，确定后才能执行
+                        退课和选课必须先获得课程id，并且退实际操作前必须要询问是否确定，确定后才能执行
                         """)
                 .defaultAdvisors(
                         new PromptChatMemoryAdvisor(chatMemory),
