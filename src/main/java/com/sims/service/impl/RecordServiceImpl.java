@@ -1,6 +1,7 @@
 package com.sims.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.sims.handle.Exception.LoginException;
 import com.sims.mapper.RecordMapper;
 import com.sims.pojo.vo.ActivityRecordVO;
 import com.sims.pojo.vo.CompetitionRecordVO;
@@ -28,7 +29,7 @@ public class RecordServiceImpl implements RecordService {
     @Override
     public List<CompetitionRecordVO> getCompetitionRecord(Long studentId, String semester) {
         if (studentId==null)
-            throw new RuntimeException("登录状态错误");
+            throw new LoginException("登录状态错误");
         LocalDate startDate =null;
         LocalDate endDate = null;
         if(semester!=null){
@@ -47,7 +48,7 @@ public class RecordServiceImpl implements RecordService {
     @Override
     public List<ActivityRecordVO> getActivityRecord(Long studentId, String semester) {
         if (studentId==null)
-            throw new RuntimeException("登录状态错误");
+            throw new LoginException("登录状态错误");
         LocalDateTime startDate =null;
         LocalDateTime endDate = null;
         if(semester!=null){

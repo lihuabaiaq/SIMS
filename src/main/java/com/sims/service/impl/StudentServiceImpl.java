@@ -1,7 +1,9 @@
 package com.sims.service.impl;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.sims.constants.RedisConstants;
+import com.sims.handle.Exception.LoginException;
 import com.sims.mapper.CourseMapper;
 import com.sims.mapper.StudentMapper;
 import com.sims.pojo.dto.StudentChangeDTO;
@@ -13,21 +15,23 @@ import com.sims.pojo.vo.ScoreAVGVO;
 import com.sims.pojo.vo.StudentGradeVO;
 import com.sims.service.StudentService;
 import com.sims.util.MD5Util;
-import io.lettuce.core.ScriptOutputType;
 import jakarta.annotation.Resource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> implements StudentService {
 
 
     private final StudentMapper studentMapper;
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
 
     public StudentServiceImpl(StudentMapper studentMapper) {
         this.studentMapper = studentMapper;
@@ -43,7 +47,7 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
         if (student != null && student.getPassword().equals(password)) {
             return student;
         }
-        throw new RuntimeException("用户名或密码错误");
+        throw new LoginException("用户名或密码错误");
     }
 
     @Override
@@ -53,7 +57,7 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
                 .eq("student_id",studentChangeDTO.getStudentId())
                 .one();
         if(student==null || !student.getPassword().equals(MD5Util.encrypt(studentChangeDTO.getOriginPassword())))
-            throw new RuntimeException("原密码错误,无法修改");
+            throw new LoginException("原密码错误,无法修改");
         studentChangeDTO.setChangePassword(MD5Util.encrypt(studentChangeDTO.getChangePassword()));
         studentMapper.updateInfo(studentChangeDTO);
     }
@@ -69,32 +73,35 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
     }
 
     @Override
-    public ScoreAVGVO studyanalyze(Long studentId, String startsemester,String endsemester) {
-        String grade=studentId.toString().substring(0,4);
-        ScoreAVGVO scoreAVGVO = new ScoreAVGVO();
-        List<String>semesters=new ArrayList<>();
+    public ScoreAVGVO studyanalyze(Long studentId, String startsemester, String endsemester) {
+        String grade = studentId.toString().substring(0, 4);
+        //ScoreAVGVO scoreAVGVO = new ScoreAVGVO();
+        List<String> semesters = new ArrayList<>();
         String[] start = startsemester.split("-");
-        String[] end = endsemester.split("-");
+        //String[] end = endsemester.split("-");
         semesters.add(startsemester);
-        while(!startsemester.equals(endsemester)){
-            if(start[2].equals("1")){
-                start[2]="2";
-                startsemester=String.join("-",start);
+        while (!startsemester.equals(endsemester)) {
+            if (start[2].equals("1")) {
+                start[2] = "2";
+                startsemester = String.join("-", start);
                 semesters.add(startsemester);
-            }
-            else if(start[2].equals("2")){
-                start[0]=String.valueOf(Integer.parseInt(start[0])+1);
-                start[1]=String.valueOf(Integer.parseInt(start[0])+1);
-                start[2]="1";
-                startsemester=String.join("-",start);
+            } else if (start[2].equals("2")) {
+                start[0] = String.valueOf(Integer.parseInt(start[0]) + 1);
+                start[1] = String.valueOf(Integer.parseInt(start[0]) + 1);
+                start[2] = "1";
+                startsemester = String.join("-", start);
                 semesters.add(startsemester);
             }
         }
-            List<AVGScore> studentAllScoreList=courseMapper.getStudentScore(studentId,semesters);
-            List<AVGScore> avgAllScoreList=courseMapper.getGradeScore(semesters,grade);
-            ScoreAVGVO scoreAVGVO1=new ScoreAVGVO();
-            scoreAVGVO1.setStudentScoreList(studentAllScoreList);
-            scoreAVGVO1.setAverageScoreList(avgAllScoreList);
+        List<AVGScore> studentAllScoreList;
+        if (semesters.isEmpty())
+            studentAllScoreList = getStudentScore(studentId);
+        else
+            studentAllScoreList = courseMapper.getStudentScore(studentId, semesters);
+        List<AVGScore> avgAllScoreList = courseMapper.getGradeScore(semesters, grade);
+        ScoreAVGVO scoreAVGVO1 = new ScoreAVGVO();
+        scoreAVGVO1.setStudentScoreList(studentAllScoreList);
+        scoreAVGVO1.setAverageScoreList(avgAllScoreList);
         return scoreAVGVO1;
     }
 
@@ -103,7 +110,7 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
         List<String> semesters = new ArrayList<>();
         String admissionDate=studentMapper.getInfo(studentId);
         int startYear = Integer.parseInt(admissionDate.substring(0, 4));
-        int endYear = startYear + 1;
+        //int endYear = startYear + 1;
         int semesterNumber =1;
         LocalDate currentDate = LocalDate.now();
         LocalDate startDate = LocalDate.of(startYear, 9, 1); // 第一学期开始日期
@@ -121,4 +128,18 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
         }
         return semesters;
     }
+
+    @Override
+    public List<AVGScore> getStudentScore(Long studentId) {
+        String key=RedisConstants.AVG_SCORES_KEY+studentId;
+        List<AVGScore> avgscores = JSONObject.parseArray(stringRedisTemplate.opsForValue().get(key),AVGScore.class);
+        if (avgscores!=null){
+            return avgscores;
+        }
+        avgscores = courseMapper.getStudentScore(studentId,null);
+        stringRedisTemplate.opsForValue().set(key, JSONObject.toJSONString(avgscores),
+                RedisConstants.AVG_SCORES_TTL, TimeUnit.DAYS);
+        return avgscores;
+    }
+
 }

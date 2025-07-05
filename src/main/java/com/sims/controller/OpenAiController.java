@@ -12,7 +12,6 @@ import com.sims.util.UserHolder;
 import jakarta.annotation.Resource;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvisor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Description;
 import org.springframework.http.MediaType;
@@ -32,11 +31,11 @@ public class OpenAiController {
 
     @Resource
     ChatClient chatClient;
-    @Autowired
+    @Resource
     private CompetitionService competitionService;
-    @Autowired
+    @Resource
     private JobService jobService;
-    @Autowired
+    @Resource
     private CourseService courseService;
 
 

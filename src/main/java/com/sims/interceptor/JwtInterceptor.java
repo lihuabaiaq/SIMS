@@ -5,12 +5,11 @@ import com.sims.util.JwtUtil;
 import com.sims.util.UserHolder;
 import io.jsonwebtoken.Claims;
 import jakarta.annotation.Resource;
-import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
-import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 @Component
@@ -18,7 +17,7 @@ public class JwtInterceptor implements HandlerInterceptor {
     @Resource
     JwtConfiguration jwtConfiguration;
 
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+    public boolean preHandle(HttpServletRequest request, @NotNull HttpServletResponse response, @NotNull Object handler) {
         if (HttpMethod.OPTIONS.toString().equals(request.getMethod())) {
             response.setStatus(HttpServletResponse.SC_OK);
             return true;
