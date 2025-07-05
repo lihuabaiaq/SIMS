@@ -2,8 +2,8 @@ package com.sims.controller;
 
 
 import com.sims.pojo.dto.CompetitionDTO;
-import com.sims.pojo.entity.Course;
 import com.sims.pojo.vo.CompetitionVO;
+import com.sims.pojo.vo.CourseVO;
 import com.sims.pojo.vo.JobVO;
 import com.sims.service.CompetitionService;
 import com.sims.service.CourseService;
@@ -91,19 +91,19 @@ public class OpenAiController {
 
     @Bean
     @Description("查看可以选的课")
-    public Function<StudentInput,List<Course>> getCourseListing() {
+    public Function<StudentInput,List<CourseVO>> getCourseListing() {
         return input -> courseService.getHavingList(input.studentId);
     }
 
     @Bean
     @Description("查看已经选了的课")
-    public Function<StudentInput,List<Course>> getCourseListed() {
+    public Function<StudentInput,List<CourseVO>> getCourseListed() {
         return input -> courseService.getHadList(input.studentId);
     }
 
     @Bean
     @Description("查看还未开始的选课")
-    public Function<StudentInput,List<Course>> getCoursebeList() {
+    public Function<StudentInput,List<CourseVO>> getCoursebeList() {
         return input -> courseService.getBeHavingList(input.studentId);
     }
 

@@ -6,6 +6,7 @@ import com.sims.mapper.CourseMapper;
 import com.sims.mapper.GradeMapper;
 import com.sims.pojo.entity.Course;
 import com.sims.pojo.entity.Grade;
+import com.sims.pojo.vo.CourseVO;
 import com.sims.service.CourseService;
 import com.sims.service.StudentService;
 import com.sims.util.UserHolder;
@@ -40,30 +41,24 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
     private StringRedisTemplate stringRedisTemplate;
     @Resource
     RabbitTemplate rabbitTemplate;
+    @Autowired
+    private CourseMapper courseMapper;
 
-    public List<Course> getHavingList(@Param("studentId") Long studentId) {
+    public List<CourseVO> getHavingList(@Param("studentId") Long studentId) {
         String grade = studentService.getById(studentId).getGrade();
-        return this.query().eq("grade_requirement",grade)
-                .eq("status",1)
-                .notExists("select 1 from grade where grade.course_id = course.course_id and grade.student_id ="+studentId)
-                .list();
+        return courseMapper.getHavingList(grade,studentId);
     }
 
     @Override
-    public List<Course> getHadList(@Param("studentId") Long studentId) {
+    public List<CourseVO> getHadList(@Param("studentId") Long studentId) {
         String grade = studentService.getById(studentId).getGrade();
-        return this.query().eq("grade_requirement",grade)
-                .eq("status",1)
-                .exists("select 1 from grade where grade.course_id = course.course_id and grade.student_id ="+studentId)
-                .list();
+        return courseMapper.getHadList(grade,studentId);
     }
 
     @Override
-    public List<Course> getBeHavingList(Long studentId) {
+    public List<CourseVO> getBeHavingList(Long studentId) {
         String grade = studentService.getById(studentId).getGrade();
-        return this.query().eq("grade_requirement",grade)
-                .eq("status",0)
-                .list();
+        return courseMapper.getbeHavingList(grade,studentId);
     }
 
     @Override

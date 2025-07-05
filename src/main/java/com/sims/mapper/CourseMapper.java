@@ -4,10 +4,9 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.sims.pojo.dto.StudentGradeDTO;
 import com.sims.pojo.entity.AVGScore;
 import com.sims.pojo.entity.Course;
+import com.sims.pojo.vo.CourseVO;
 import com.sims.pojo.vo.StudentGradeVO;
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
 
@@ -21,9 +20,9 @@ public interface CourseMapper extends BaseMapper<Course> {
 
     List<AVGScore> getGradeScore(List<String> semesters, String grade);
 
-    @Update("update course set status = #{status} where course_id = #{courseId}")
-    void updateStatus(Long courseId, Integer status);
+    List<CourseVO> getHavingList(String grade, Long studentId);
 
-    @Select("select * from course where teacher_id = #{teacherId}")
-    List<Course> getCourse(Long teacherId);
+    List<CourseVO> getHadList(String grade, Long studentId);
+
+    List<CourseVO> getbeHavingList(String grade, Long studentId);
 }
