@@ -5,13 +5,9 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.springdoc.core.customizers.OperationCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.web.servlet.config.annotation.*;
-
-import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 
@@ -37,7 +33,7 @@ public class MvcConfiguration implements WebMvcConfigurer {
                         "/assets/**",
                         "/css/**",
                         "/js/**"
-                );;
+                );
     }
 
     @Override

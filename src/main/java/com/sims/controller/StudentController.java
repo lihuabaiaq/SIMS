@@ -10,17 +10,13 @@ import com.sims.pojo.vo.ScoreAVGVO;
 import com.sims.pojo.vo.StudentGradeVO;
 import com.sims.pojo.vo.StudentLoginVO;
 import com.sims.service.StudentService;
-import com.sims.service.TeacherService;
 import com.sims.util.JwtUtil;
 import com.sims.util.Result;
 import jakarta.annotation.Resource;
-import jakarta.websocket.server.PathParam;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/student")
@@ -62,7 +58,7 @@ public class StudentController {
     }
 
     @GetMapping("/studentanalyze/getavailable")
-    private Result<List> getAvailableSemester(@RequestParam Long studentId){
+    private Result<List<String>> getAvailableSemester(@RequestParam Long studentId){
         return Result.ok(studentService.getAvailableSemester(studentId));
     }
 

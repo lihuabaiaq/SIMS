@@ -1,6 +1,9 @@
 package com.sims.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.sims.constants.RecommendConstants;
+import com.sims.handle.Exception.CompetitionExceotion;
+import com.sims.handle.Exception.CourseException;
 import com.sims.mapper.CompetitionMapper;
 import com.sims.mapper.CourseMapper;
 import com.sims.pojo.dto.CompetitionDTO;
@@ -36,7 +39,7 @@ public class CompetitionServiceImpl extends ServiceImpl<CompetitionMapper, Compe
                 .gt("registration_deadline", LocalDate.now())
                 .list();
         if(competitions.isEmpty())
-            throw new RuntimeException("没有近期的竞赛");
+            throw new CompetitionExceotion("没有近期的竞赛");
         return competitions;
     }
 
@@ -44,9 +47,9 @@ public class CompetitionServiceImpl extends ServiceImpl<CompetitionMapper, Compe
     @Transactional
     public List<CompetitionVO> competitionRecommend(CompetitionDTO competitionDTO) {
         Long studentId = competitionDTO.getStudentId();
-        List<AVGScore> avgScores = courseMapper.getStudentScore(studentId, null);
+        List<AVGScore> avgScores =studentService.getStudentScore(studentId);
         if(avgScores.isEmpty())
-            throw new RuntimeException("学号错误，没有成绩");
+            throw new CourseException("学号错误，没有成绩");
         Map<String, Double> avgScoreMap = avgScores.stream()
                 .collect(Collectors.toMap(AVGScore::getCourseCategory, AVGScore::getAvgScore));
         List<Competition> competitions = this.query()
@@ -72,11 +75,11 @@ public class CompetitionServiceImpl extends ServiceImpl<CompetitionMapper, Compe
                 }
             String recommendStatus;
             if (comWeight > 80) {
-                recommendStatus = "推荐";
+                recommendStatus = RecommendConstants.RECOMMEND;
             } else if (comWeight > 60) {
-                recommendStatus = "可以考虑";
+                recommendStatus = RecommendConstants.RECOMMEND_MID;
             } else
-                recommendStatus = "不推荐";
+                recommendStatus = RecommendConstants.RECOMMEND_LOW;
             String reason = stringBuilder.toString();
             competitionVO.setRecommendStatus(recommendStatus);
             competitionVO.setReason(reason);

@@ -2,15 +2,17 @@ package com.sims.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.sims.constants.RedisConstants;
+import com.sims.handle.Exception.DataBaseException;
 import com.sims.mapper.*;
 import com.sims.pojo.entity.*;
 import com.sims.pojo.vo.JobVO;
 import com.sims.service.JobService;
+import com.sims.service.StudentService;
 import com.sims.util.AwardScoreUtil;
 import com.sims.util.UserHolder;
 import jakarta.annotation.Resource;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,29 +27,28 @@ public class JobServiceImpl extends ServiceImpl<JobMapper, Job> implements JobSe
 
     @Resource
     StringRedisTemplate stringRedisTemplate;
-    @Autowired
+    @Resource
     private JobMapper jobMapper;
-    @Autowired
-    private StudentMapper studentMapper;
-    @Autowired
-    private CourseMapper courseMapper;
-    @Autowired
+    @Resource
     private CompetitionMapper competitionMapper;
 
     @Resource
     ActivityMapper activityMapper;
+    @Resource
+    private StudentService studentService;
+
 
     @Override
     @Transactional
     public List<JobVO> JobRecommend(Long studentId) {
-        String jobKey = "job:commend:" + studentId;
+        String jobKey = RedisConstants.JOB_COMMEND_KEY + studentId;
         Set<String> redisJobVOS = stringRedisTemplate.opsForZSet().reverseRange(jobKey, 0, 5);
         if (redisJobVOS != null && !redisJobVOS.isEmpty()) {
             return redisJobVOS.stream()
                     .map(jobVO -> JSONObject.parseObject(jobVO, JobVO.class))
                     .collect(Collectors.toList());
         }
-        Map<String, Double> scoreMap = courseMapper.getStudentScore(studentId,null)
+        Map<String, Double> scoreMap = studentService.getStudentScore(studentId)
                 .stream().collect(Collectors.toMap(AVGScore::getCourseCategory, AVGScore::getAvgScore));
         Map<String, List<CompetitionAward>> competitionMap = competitionMapper.getCompetitionAward(studentId)
                 .stream().collect(Collectors.groupingBy(CompetitionAward::getCategory));
@@ -57,10 +58,10 @@ public class JobServiceImpl extends ServiceImpl<JobMapper, Job> implements JobSe
             JobVO jobVO = new JobVO();
             BeanUtils.copyProperties(job, jobVO);
             return jobVO;
-        }).collect(Collectors.toList());
+        }).toList();
         jobVOS.forEach(jobVO -> {
             Long jobId = jobVO.getJobId();
-            Double score = 0D;
+            double score = 0D;
             StringBuilder stringBuilder = new StringBuilder();
             List<JobCourseWeight> jobCourseWeights = jobMapper.getCourseWeight(jobId);
             for (JobCourseWeight jobCourseWeight : jobCourseWeights) {
@@ -98,14 +99,14 @@ public class JobServiceImpl extends ServiceImpl<JobMapper, Job> implements JobSe
                     .map(jobVO -> JSONObject.parseObject(jobVO, JobVO.class))
                     .collect(Collectors.toList());
         } catch (Exception e) {
-            throw new RuntimeException("数据库错误");
+            throw new DataBaseException("数据库错误");
         }
     }
 
     @Override
     public void refresh() {
         Long studentId = UserHolder.getId();
-        stringRedisTemplate.delete("job:commend:" + studentId);
+        stringRedisTemplate.delete(RedisConstants.JOB_COMMEND_KEY + studentId);
     }
 
 }

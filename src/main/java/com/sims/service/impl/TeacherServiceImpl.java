@@ -1,6 +1,10 @@
 package com.sims.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.sims.constants.MQConstants;
+import com.sims.constants.RedisConstants;
+import com.sims.handle.Exception.LoginException;
+import com.sims.handle.Exception.RegisterException;
 import com.sims.mapper.CourseMapper;
 import com.sims.mapper.GradeMapper;
 import com.sims.mapper.TeacherMapper;
@@ -19,7 +23,6 @@ import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,7 +46,7 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
     RabbitTemplate rabbitTemplate;
     @Resource
     StringRedisTemplate stringRedisTemplate;
-    @Autowired
+    @Resource
     private GradeMapper gradeMapper;
 
     @Override
@@ -54,7 +57,7 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
         if (teacher != null && teacher.getPassword().equals(password)) {
             return teacher;
         }
-        throw new RuntimeException("用户名或密码错误");
+        throw new LoginException("用户名或密码错误");
     }
 
     @Override
@@ -63,7 +66,7 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
                 .eq("teacher_id",teacherChangeDTO.getTeacherId())
                 .one();
         if(teacher==null || !teacher.getPassword().equals(MD5Util.encrypt(teacherChangeDTO.getOriginPassword())))
-            throw new RuntimeException("原密码错误,无法修改");
+            throw new LoginException("原密码错误,无法修改");
         teacherChangeDTO.setChangePassword(MD5Util.encrypt(teacherChangeDTO.getChangePassword()));
         teacherMapper.updateInfo(teacherChangeDTO);
     }
@@ -96,18 +99,18 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
         Long courseId= course.getCourseId();
         LocalDateTime registerStart = course.getRegisterStart();
         LocalDateTime registerEnd = course.getRegisterEnd();
-        rabbitTemplate.convertAndSend("delayExchange","course.register.start",courseId, message -> {
+        rabbitTemplate.convertAndSend(MQConstants.DELAY_EXCHANGE,MQConstants.REGISTER_START_KEY,courseId, message -> {
             Long time=ChronoUnit.MILLIS.between(LocalDateTime.now(),registerStart);
             if(time<0)
-                throw new RuntimeException("开始时间不能早于当前时间");
+                throw new RegisterException("开始时间不能早于当前时间");
             message.getMessageProperties().setDelayLong(time);
             return message;}
         );
-        stringRedisTemplate.opsForValue().set("course:fill:"+courseId, String.valueOf(0));
-        rabbitTemplate.convertAndSend("delayExchange","course.register.end",courseId,message -> {
+        stringRedisTemplate.opsForValue().set(RedisConstants.COURSE_FILL_KEY +courseId, String.valueOf(0));
+        rabbitTemplate.convertAndSend(MQConstants.DELAY_EXCHANGE,MQConstants.REGISTER_END_KEY,courseId,message -> {
             Long time=ChronoUnit.MILLIS.between(LocalDateTime.now(),registerEnd);
             if(time<0)
-                throw new RuntimeException("结束时间不能早于当前时间");
+                throw new RegisterException("结束时间不能早于当前时间");
             message.getMessageProperties().setDelayLong(time);
         return message;}
         );
@@ -125,9 +128,9 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
     }
 
     @RabbitListener(bindings = @QueueBinding(
-            value = @Queue(value = "course.register.start.queue",durable = "true"),
-            exchange = @Exchange(value = "delayExchange",delayed = "true"),
-            key = {"course.register.start"}
+            value = @Queue(value = MQConstants.REGISTER_START_QUEUE,durable = "true"),
+            exchange = @Exchange(value =MQConstants.DELAY_EXCHANGE,delayed = "true"),
+            key = {MQConstants.REGISTER_START_KEY}
     ))
     public void courseRegisterStart(Long courseId){
         Course course = courseMapper.selectById(courseId);
@@ -137,13 +140,13 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
     }
 
     @RabbitListener(bindings = @QueueBinding(
-            value = @Queue(value = "course.register.end.queue",durable = "true"),
-            exchange = @Exchange(value = "delayExchange",delayed = "true"),
-            key = {"course.register.end"}
+            value = @Queue(value =MQConstants.REGISTER_END_QUEUE,durable = "true"),
+            exchange = @Exchange(value = MQConstants.DELAY_EXCHANGE,delayed = "true"),
+            key = {MQConstants.REGISTER_END_KEY}
     ))
     public void courseRegisterEnd(Long courseId){
-        stringRedisTemplate.delete("course:fill:"+courseId.toString());
-        stringRedisTemplate.delete("course:register:"+courseId.toString());
+        stringRedisTemplate.delete(RedisConstants.COURSE_FILL_KEY+courseId);
+        stringRedisTemplate.delete(RedisConstants.COURSE_REGISTER_KEY+courseId);
         Course course = courseMapper.selectById(courseId);
         if(course==null||course.getStatus()!=1)
             return;

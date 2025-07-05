@@ -2,6 +2,10 @@ package com.sims.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.sims.constants.MQConstants;
+import com.sims.constants.RedisConstants;
+import com.sims.handle.Exception.CourseException;
+import com.sims.handle.Exception.RegisterException;
 import com.sims.mapper.CourseMapper;
 import com.sims.mapper.GradeMapper;
 import com.sims.pojo.entity.Course;
@@ -65,47 +69,48 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
     public void registerCourse(Long courseId) {
         Course course=this.getById(courseId);
         if(course== null)
-            throw new RuntimeException("没有该课程");
+            throw new CourseException("没有该课程");
         if(course.getStatus()!=1)
-            throw new RuntimeException("该课程尚未开放选课");
+            throw new RegisterException("该课程未开放选课");
         Long studentId = UserHolder.getId();
         Integer max = course.getMaxStudents();
         String luaScript =
-                "if tonumber(redis.call('GET', KEYS[1])) >= tonumber(ARGV[1]) then\n" +
-                "    return 1\n" +
-                "end\n" +
-                "if redis.call('SISMEMBER', KEYS[2], ARGV[2]) == 1 then\n" +
-                "    return 2\n" +
-                "end\n" +
-                        "redis.call('INCR', KEYS[1])\n" +
-                        "redis.call('SADD', KEYS[2], ARGV[2])\n" +
-                        "return 0";
+                """
+                        if tonumber(redis.call('GET', KEYS[1])) >= tonumber(ARGV[1]) then
+                            return 1
+                        end
+                        if redis.call('SISMEMBER', KEYS[2], ARGV[2]) == 1 then
+                            return 2
+                        end
+                        redis.call('INCR', KEYS[1])
+                        redis.call('SADD', KEYS[2], ARGV[2])
+                        return 0
+                """;
 
         DefaultRedisScript<Long> script = new DefaultRedisScript<>();
         script.setScriptText(luaScript);
         script.setResultType(Long.class);
 
-        String result = stringRedisTemplate.execute(script,
+         int result = stringRedisTemplate.execute(script,
                 Arrays.asList(
-                        "course:fill:" + courseId.toString(),
-                        "course:register:" + courseId.toString()
+                        RedisConstants.COURSE_FILL_KEY + courseId,
+                        RedisConstants.COURSE_REGISTER_KEY + courseId
                 ),
                 max.toString(), // ARGV[1]
                 studentId.toString() // ARGV[2]
-        ).toString();
-        Integer i = Integer.valueOf(result);
+        ).intValue();
 
-        switch (i) {
+        switch (result) {
             case 1:
-                throw new RuntimeException("选课人数已满");
+                throw new RegisterException("选课人数已满");
             case 2:
-                throw new RuntimeException("已选该课程,禁止重复选择");
+                throw new RegisterException("已选该课程,禁止重复选择");
             case 0:
                 Grade studentCourse = new Grade();
                 studentCourse.setCourseId(courseId);
                 studentCourse.setStudentId(studentId);
                 studentCourse.setSemester(course.getSemester());
-                rabbitTemplate.convertAndSend("courseExchange","course.register",studentCourse);
+                rabbitTemplate.convertAndSend(MQConstants.COURSE_EXCHANGE,MQConstants.REGISTER_KEY,studentCourse);
         }
     }
 
@@ -113,10 +118,11 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
     @Transactional
     public void deleteCourse(Long courseId) {
         Long studentId = UserHolder.getId();
-        if(BooleanUtils.isFalse(stringRedisTemplate.opsForSet().isMember("course:register:" + courseId, studentId.toString())))
-            throw new RuntimeException("尚未选择该课程");
-        stringRedisTemplate.opsForSet().remove("course:register:"+courseId,studentId.toString());
-        stringRedisTemplate.delete("course:registered:" + courseId+ ":" + studentId);
+        String key=RedisConstants.COURSE_REGISTER_KEY + courseId;
+        if(BooleanUtils.isFalse(stringRedisTemplate.opsForSet().isMember(key, studentId.toString())))
+            throw new RegisterException("尚未选择该课程");
+        stringRedisTemplate.opsForSet().remove(key,studentId.toString());
+        stringRedisTemplate.delete(RedisConstants.LOCK_REGISTER_KEY + courseId+ ":" + studentId);
         gradeMapper.delete(new LambdaQueryWrapper<Grade>()
                 .eq(Grade::getStudentId,studentId)
                 .eq(Grade::getCourseId,courseId));
@@ -127,13 +133,13 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
 
 
     @Transactional
-    @RabbitListener(bindings = @QueueBinding(value = @Queue(value = "course.regiest.queue"),
-    exchange = @Exchange(value = "courseExchange"),
-    key = "course.register"))
+    @RabbitListener(bindings = @QueueBinding(value = @Queue(value = MQConstants.REGISTER_QUEUE),
+    exchange = @Exchange(value = MQConstants.COURSE_EXCHANGE),
+    key = MQConstants.REGISTER_KEY))
     public void RegisterCourse(Grade studentCourse){
-        String lockKey = "course:registered:" + studentCourse.getCourseId() + ":" + studentCourse.getStudentId();
+        String lockKey = RedisConstants.LOCK_REGISTER_KEY + studentCourse.getCourseId() + ":" + studentCourse.getStudentId();
         Boolean isExist = stringRedisTemplate.opsForValue()
-                .setIfAbsent(lockKey, "1", 1, TimeUnit.DAYS);
+                .setIfAbsent(lockKey, "1", RedisConstants.LOCK_REGISTER_TTL, TimeUnit.HOURS);
         if(isExist==null|| !isExist){
             log.info("重复消息");
             return;
@@ -148,7 +154,7 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         List<Course> courses = this.query().eq("status", 1).list();
         for (Course course : courses) {
             Integer currents = this.getById(course.getCourseId()).getCurrentStudents();
-            stringRedisTemplate.opsForValue().set("course:fill:" + course.getCourseId(), currents.toString());
+            stringRedisTemplate.opsForValue().set(RedisConstants.COURSE_FILL_KEY + course.getCourseId(), currents.toString());
         }
     }
 }
