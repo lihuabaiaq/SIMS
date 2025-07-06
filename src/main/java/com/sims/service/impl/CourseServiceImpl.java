@@ -48,9 +48,17 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
     @Autowired
     private CourseMapper courseMapper;
 
+    @Override
     public List<CourseVO> getHavingList(@Param("studentId") Long studentId) {
         String grade = studentService.getById(studentId).getGrade();
-        return courseMapper.getHavingList(grade,studentId);
+        return courseMapper.getHavingList(grade,studentId).stream().peek(
+                courseVO -> {
+                    String string = stringRedisTemplate.opsForValue().get(RedisConstants.COURSE_FILL_KEY + courseVO.getCourseId());
+                    if (string == null)
+                        throw new CourseException("课程未开放选课");
+                    courseVO.setCurrentStudents(Integer.valueOf(string));
+                }
+        ).toList();
     }
 
     @Override
