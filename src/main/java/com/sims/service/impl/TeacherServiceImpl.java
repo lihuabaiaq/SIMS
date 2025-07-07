@@ -3,6 +3,7 @@ package com.sims.service.impl;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sims.constants.MQConstants;
 import com.sims.constants.RedisConstants;
+import com.sims.handle.Exception.CourseException;
 import com.sims.handle.Exception.LoginException;
 import com.sims.handle.Exception.RegisterException;
 import com.sims.mapper.CourseMapper;
@@ -12,6 +13,7 @@ import com.sims.pojo.dto.ScoreDTO;
 import com.sims.pojo.dto.TeacherChangeDTO;
 import com.sims.pojo.dto.TeacherDTO;
 import com.sims.pojo.entity.Course;
+import com.sims.pojo.entity.Grade;
 import com.sims.pojo.entity.Teacher;
 import com.sims.service.CourseService;
 import com.sims.service.TeacherService;
@@ -123,8 +125,31 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
 
     @Override
     public void updateScores(List<ScoreDTO> scoreList) {
-        scoreList.forEach(scoreDTO -> scoreDTO.setGradePoint((scoreDTO.getFinalGrade() - 50) / 10));
+        scoreList.forEach(scoreDTO ->{
+            if(scoreDTO.getFinalGrade() < 50){
+                scoreDTO.setGradePoint(0.0);
+            } else {
+                scoreDTO.setGradePoint((scoreDTO.getFinalGrade() - 50) / 10);}
+            });
+
         gradeMapper.updateScores(scoreList);
+    }
+
+    @Override
+    public List<Grade> getGrade(Long courseId) {
+        List<Grade> gradeList = gradeMapper.getGrade(courseId);
+        return gradeList;
+    }
+
+    @Override
+    public void endCourse(Long courseId) {
+        List<Grade> gradeList = gradeMapper.getGrade(courseId);
+        for(Grade grade:gradeList){
+            if(grade.getRegularGrade()==null || grade.getFinalGrade()==null || grade.getExamGrade()==null || grade.getComments()==null){
+                throw new CourseException("有学生成绩为空，无法结课");
+            }
+        }
+        courseMapper.endCourse(courseId);
     }
 
     @RabbitListener(bindings = @QueueBinding(

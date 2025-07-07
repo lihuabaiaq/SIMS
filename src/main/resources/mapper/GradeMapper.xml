@@ -3,20 +3,25 @@
 <mapper namespace="com.sims.mapper.GradeMapper">
     <update id="updateScores">
         <foreach collection="scoreList" item="score" separator=";">
-            update grade <set>
-            <if test="score.regularGrades != null">
-                regular_grade = #{score.regularGrade},
-            </if>
-            <if test="score.examGrades != null">
-                exam_grade = #{score.examGrade},
-            </if>
-            <if test="score.Comments != null">
-                comments = #{score.comments},
-            </if>
-                final_grade = #{score.finalGrade},
-                grade_point = #{score.gradePoint}
-        </set>
-            where id = #{score.id}
+            update grade
+            <set>
+                <if test="score.regularGrade != null">
+                    regular_grade = #{score.regularGrade},
+                </if>
+                <if test="score.examGrade != null">
+                    exam_grade = #{score.examGrade},
+                </if>
+                <if test="score.finalGrade != null">
+                    final_grade = #{score.finalGrade},
+                </if>
+                <if test="score.gradePoint != null">
+                    grade_point = #{score.gradePoint},
+                </if>
+                <if test="score.comments != null and score.comments != ''">
+                    comments = #{score.comments},
+                </if>
+            </set>
+            where student_id = #{score.studentId} and course_id = #{score.courseId}
         </foreach>
     </update>
 </mapper>

@@ -5,6 +5,7 @@ import com.sims.pojo.dto.ScoreDTO;
 import com.sims.pojo.dto.TeacherChangeDTO;
 import com.sims.pojo.dto.TeacherDTO;
 import com.sims.pojo.entity.Course;
+import com.sims.pojo.entity.Grade;
 import com.sims.pojo.entity.Teacher;
 import com.sims.pojo.vo.TeacherLoginVO;
 import com.sims.service.TeacherService;
@@ -54,10 +55,20 @@ public class TeacherController {
        return Result.ok(teacherService.getCourse(teacherId));
     }
 
+    @GetMapping("/getgrade")
+    public Result<List<Grade>> getGrade(@RequestParam Long courseId){
+        return Result.ok(teacherService.getGrade(courseId));
+    }
+
     @PutMapping("/scores")
     public Result<Void> updateScores(@RequestBody List<ScoreDTO> scoreList){
         teacherService.updateScores(scoreList);
         return Result.ok();
     }
 
+    @PostMapping("/endCourse")
+    public Result<Void> endCourse(@RequestParam Long courseId){
+        teacherService.endCourse(courseId);
+        return Result.ok();
+    }
 }

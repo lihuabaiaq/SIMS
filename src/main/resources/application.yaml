@@ -13,7 +13,7 @@ spring:
           model: qwen-max
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://1.92.73.197:3306/sism?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&characterEncoding=utf-8
+    url: jdbc:mysql://1.92.73.197:3306/sism?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&characterEncoding=utf-8&allowMultiQueries=true
     username: simsuser
     password: simssql
 

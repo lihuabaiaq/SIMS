@@ -4,7 +4,8 @@ import lombok.Data;
 
 @Data
 public class ScoreDTO {
-    private Long id;
+    private Long studentId;
+    private Long courseId;
     private Double regularGrade;
     private Double  examGrade;
     private Double finalGrade;
