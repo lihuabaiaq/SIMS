@@ -8,7 +8,7 @@
         where g.student_id = #{studentId}
     </select>
     <select id="select" resultType="com.sims.pojo.vo.StudentGradeVO">
-        select c.course_name,c.category,c.grade_requirement courseYear,c.credit,g.*
+        select c.course_name,c.category courseCategory,c.grade_requirement courseYear,c.credit,g.*
         from course c left join grade g on c.course_id = g.course_id
         <where>
             student_id=#{studentId}
