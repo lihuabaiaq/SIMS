@@ -7,6 +7,7 @@ import com.sims.pojo.entity.Course;
 import com.sims.pojo.vo.CourseVO;
 import com.sims.pojo.vo.StudentGradeVO;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
 
@@ -25,4 +26,7 @@ public interface CourseMapper extends BaseMapper<Course> {
     List<CourseVO> getHadList(String grade, Long studentId);
 
     List<CourseVO> getbeHavingList(String grade, Long studentId);
+
+    @Update("update course set status =3 where course_id=#{courseId}")
+    void endCourse(Long courseId);
 }

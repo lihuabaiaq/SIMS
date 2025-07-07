@@ -17,16 +17,19 @@ public class CourseController {
     private CourseService courseService;
 
     @GetMapping("/list/having")
+    //获取开放选课且该学生没有选的课程
     public Result<List<CourseVO>> getHavingList(@RequestParam Long studentId) {
         return Result.ok(courseService.getHavingList(studentId));
     }
 
     @GetMapping("/list/had")
+    //获取开放选课且该学生已经选择的课程
     public Result<List<CourseVO>> getHadList(@RequestParam Long studentId) {
         return Result.ok(courseService.getHadList(studentId));
     }
 
     @GetMapping("/list/behaving")
+    //获取未开放的所有课程
     public Result<List<CourseVO>> getBehavingList(@RequestParam Long studentId) {
         return Result.ok(courseService.getBeHavingList(studentId));
     }

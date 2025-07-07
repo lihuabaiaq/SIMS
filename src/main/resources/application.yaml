@@ -7,13 +7,13 @@ spring:
 
   ai:
     dashscope:
-      api-key: ${DASHSCOPE_API_KEY}
+      api-key: sk-0f8f936694434156a86007ac2c7e8242
       chat:
         options:
           model: qwen-max
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://1.92.73.197:3306/sism?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&characterEncoding=utf-8
+    url: jdbc:mysql://1.92.73.197:3306/sism?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&characterEncoding=utf-8&allowMultiQueries=true
     username: simsuser
     password: simssql
 
