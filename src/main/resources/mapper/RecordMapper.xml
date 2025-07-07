@@ -7,7 +7,7 @@
         <if test="semester != null">
         and g.semester = #{semester}
         </if>
-        order by g.updated_at;
+        order by g.semester;
     </select>
     <select id="getCompetitionRecord" resultType="com.sims.pojo.vo.CompetitionRecordVO">
         select * from studentcompetition sc join competition c on sc.competition_id = c.competition_id
@@ -15,7 +15,7 @@
         <if test="startDate!=null and endDate!=null">
         and c.end_date between #{startDate} and #{endDate}
         </if>
-        order by sc.created_at;
+        order by c.end_date;
     </select>
     <select id="getActivityRecord" resultType="com.sims.pojo.vo.ActivityRecordVO">
         select * from studentactivity sa join activity a on sa.activity_id = a.activity_id
@@ -23,6 +23,6 @@
         <if test="startDate!=null and endDate!=null">
             and a.end_time between #{startDate} and #{endDate}
         </if>
-        order by sa.created_at;
+        order by a.end_time;
     </select>
 </mapper>

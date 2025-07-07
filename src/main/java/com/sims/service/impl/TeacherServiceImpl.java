@@ -77,9 +77,12 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
         Teacher teacher = query()
                 .eq("teacher_id", teacherChangeDTO.getTeacherId())
                 .one();
-        if (teacher == null || !teacher.getPassword().equals(MD5Util.encrypt(teacherChangeDTO.getOriginPassword())))
-            throw new LoginException("原密码错误,无法修改");
-        teacherChangeDTO.setChangePassword(MD5Util.encrypt(teacherChangeDTO.getChangePassword()));
+        if(!(teacherChangeDTO.getOriginPassword() ==null)){
+            if( !teacher.getPassword().equals(MD5Util.encrypt(teacherChangeDTO.getOriginPassword()))){
+                throw new LoginException("原密码错误,无法修改");
+            }
+            teacherChangeDTO.setChangePassword(MD5Util.encrypt(teacherChangeDTO.getChangePassword()));
+        }
         teacherMapper.updateInfo(teacherChangeDTO);
     }
 
