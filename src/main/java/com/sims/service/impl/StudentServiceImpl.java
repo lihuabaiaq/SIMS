@@ -56,9 +56,12 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
         Student student=query()
                 .eq("student_id",studentChangeDTO.getStudentId())
                 .one();
-        if(student==null || !student.getPassword().equals(MD5Util.encrypt(studentChangeDTO.getOriginPassword())))
-            throw new LoginException("原密码错误,无法修改");
-        studentChangeDTO.setChangePassword(MD5Util.encrypt(studentChangeDTO.getChangePassword()));
+        if(!(studentChangeDTO.getOriginPassword() ==null)){
+            if( !student.getPassword().equals(MD5Util.encrypt(studentChangeDTO.getOriginPassword()))){
+                throw new LoginException("原密码错误,无法修改");
+            }
+            studentChangeDTO.setChangePassword(MD5Util.encrypt(studentChangeDTO.getChangePassword()));
+        }
         studentMapper.updateInfo(studentChangeDTO);
     }
 
