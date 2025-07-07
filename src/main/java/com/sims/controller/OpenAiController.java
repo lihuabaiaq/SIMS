@@ -42,11 +42,17 @@ public class OpenAiController {
     public record StudentInput(Long studentId) {}
     public record CourseInput(Long courseId,Long studentId) {}
 
-    @GetMapping(value = "/chat",produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<String> chat(@RequestParam String message){
+    /**
+     * 聊天接口，用于处理用户输入的消息并返回AI的响应。
+     *
+     * @param message 用户发送的消息内容
+     * @return 返回一个Flux流，包含AI生成的响应字符串，并在最后附加"[DONE]"标识结束
+     */
+    @GetMapping(value = "/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<String> chat(@RequestParam String message) {
         Flux<String> response = chatClient.prompt()
                 .user(message)
-                .advisors(advisorSpec -> advisorSpec.param(AbstractChatMemoryAdvisor.CHAT_MEMORY_RETRIEVE_SIZE_KEY,20))
+                .advisors(advisorSpec -> advisorSpec.param(AbstractChatMemoryAdvisor.CHAT_MEMORY_RETRIEVE_SIZE_KEY, 20))
                 .stream()
                 .content();
         return response.concatWith(Flux.just("[DONE]"));

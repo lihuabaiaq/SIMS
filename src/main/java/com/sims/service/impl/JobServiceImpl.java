@@ -45,25 +45,32 @@ public class JobServiceImpl extends ServiceImpl<JobMapper, Job> implements JobSe
         String jobKey = RedisConstants.JOB_COMMEND_KEY + studentId;
         Set<String> redisJobVOS = stringRedisTemplate.opsForZSet().reverseRange(jobKey, 0, 5);
         if (redisJobVOS != null && !redisJobVOS.isEmpty()) {
+            // 如果 Redis 中存在缓存的推荐岗位，直接返回这些岗位
             return redisJobVOS.stream()
                     .map(jobVO -> JSONObject.parseObject(jobVO, JobVO.class))
                     .collect(Collectors.toList());
         }
+        // 获取学生的课程平均成绩并构建映射关系（课程类别 -> 平均分）
         Map<String, Double> scoreMap = studentService.getStudentScore(studentId)
                 .stream().collect(Collectors.toMap(AVGScore::getCourseCategory, AVGScore::getAvgScore));
+        // 获取学生参与的竞赛奖项并按竞赛类别分组
         Map<String, List<CompetitionAward>> competitionMap = competitionMapper.getCompetitionAward(studentId)
                 .stream().collect(Collectors.groupingBy(CompetitionAward::getCategory));
+        // 获取学生参与的活动列表
         List<String> activities = activityMapper.getActivities(studentId);
+        // 获取所有岗位信息，并转换为 JobVO 列表
         List<Job> jobs = this.list();
         List<JobVO> jobVOS = jobs.stream().map(job -> {
             JobVO jobVO = new JobVO();
             BeanUtils.copyProperties(job, jobVO);
             return jobVO;
         }).toList();
+        // 遍历每个岗位，计算匹配分数和推荐理由
         jobVOS.forEach(jobVO -> {
             Long jobId = jobVO.getJobId();
             double score = 0D;
             StringBuilder stringBuilder = new StringBuilder();
+            // 获取岗位对应的课程权重并计算课程得分
             List<JobCourseWeight> jobCourseWeights = jobMapper.getCourseWeight(jobId);
             for (JobCourseWeight jobCourseWeight : jobCourseWeights) {
                 String courseCategory = jobCourseWeight.getCourseCategory();
@@ -72,6 +79,7 @@ public class JobServiceImpl extends ServiceImpl<JobMapper, Job> implements JobSe
                     stringBuilder.append(courseCategory + "获得了" + scoreMap.get(courseCategory) + "分\n");
                 }
             }
+            // 获取岗位对应的竞赛权重并计算竞赛奖项得分
             List<JobCompetitionWeight> jobCompetitionWeights = jobMapper.getCompetitionWeight(jobId);
             for (JobCompetitionWeight jobCompetitionWeight : jobCompetitionWeights) {
                 String competitionCategory = jobCompetitionWeight.getCompetitionCategory();
@@ -83,6 +91,7 @@ public class JobServiceImpl extends ServiceImpl<JobMapper, Job> implements JobSe
                     }
                 }
             }
+            // 获取岗位对应的活动权重并计算活动参与得分
             List<JobActivityWeight> jobActivityWeights = jobMapper.getActivityWeight(jobId);
             for (JobActivityWeight jobActivityWeight : jobActivityWeights) {
                 if (activities.contains(jobActivityWeight.getActivityCategory())) {
@@ -90,11 +99,14 @@ public class JobServiceImpl extends ServiceImpl<JobMapper, Job> implements JobSe
                     stringBuilder.append("积极参加" + jobActivityWeight.getActivityCategory() + "类活动\n");
                 }
             }
+            // 设置最终得分与推荐理由
             jobVO.setReason(stringBuilder.toString());
             jobVO.setScore(score);
+            // 将当前岗位推荐结果写入 Redis 缓存
             stringRedisTemplate.opsForZSet().add(jobKey, JSONObject.toJSONString(jobVO), score);
         });
         try {
+            // 从 Redis 中读取前五条推荐岗位数据
             Set<String> JobVOS = stringRedisTemplate.opsForZSet().reverseRange(jobKey, 0, 5);
             return JobVOS.stream()
                     .map(jobVO -> JSONObject.parseObject(jobVO, JobVO.class))

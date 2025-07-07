@@ -39,6 +39,12 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
     @Resource
     private CourseMapper courseMapper;
 
+    /**
+     * 学生登录方法
+     * 根据传入的StudentDTO中的studentId查询学生信息，并验证密码是否正确
+     * @param studentDTO 包含学生ID和密码的传输对象
+     * @return 如果验证通过，返回学生对象；否则抛出登录异常
+     */
     @Override
     public Student studentLogin(StudentDTO studentDTO) {
         String password = studentDTO.getPassword();
@@ -50,6 +56,11 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
         throw new LoginException("用户名或密码错误");
     }
 
+    /**
+     * 修改学生信息方法
+     * 查询学生信息，验证原密码是否正确，并更新学生信息
+     * @param studentChangeDTO 包含修改信息的传输对象
+     */
     @Override
     public void stuchangeInfo(StudentChangeDTO studentChangeDTO) {
         System.out.println(studentChangeDTO);
@@ -62,16 +73,36 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
         studentMapper.updateInfo(studentChangeDTO);
     }
 
+    /**
+     * 获取学生成绩方法
+     * 调用CourseMapper获取指定学生ID的成绩信息
+     * @param studentId 学生的唯一标识符
+     * @return 返回学生具体成绩的视图对象列表
+     */
     @Override
     public List<StudentGradeVO> getGrade(Long studentId) {
         return courseMapper.getGrade(studentId);
     }
 
+    /**
+     * 按条件查询学生成绩方法
+     * 使用传入的StudentGradeDTO参数进行成绩查询
+     * @param studentGradeDTO 包含查询条件的成绩传输对象
+     * @return 返回符合查询条件的学生具体成绩的视图对象列表
+     */
     @Override
     public List<StudentGradeVO> select(StudentGradeDTO studentGradeDTO) {
         return courseMapper.select(studentGradeDTO);
     }
 
+    /**
+     * 学习分析方法
+     * 分析学生在指定学期范围内的学习情况，并与年级平均水平进行比较
+     * @param studentId 学生的唯一标识符
+     * @param startsemester 分析起始学期
+     * @param endsemester 分析结束学期
+     * @return 返回包含学生和年级平均成绩的学习分析结果视图对象
+     */
     @Override
     public ScoreAVGVO studyanalyze(Long studentId, String startsemester, String endsemester) {
         String grade = studentId.toString().substring(0, 4);
@@ -105,6 +136,12 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
         return scoreAVGVO1;
     }
 
+    /**
+     * 获取可用学期列表方法
+     * 根据学生的入学日期计算出所有可用的学期
+     * @param studentId 学生的唯一标识符
+     * @return 返回可用学期的字符串列表
+     */
     @Override
     public List<String> getAvailableSemester(Long studentId) {
         List<String> semesters = new ArrayList<>();
@@ -129,6 +166,12 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
         return semesters;
     }
 
+    /**
+     * 获取学生平均成绩方法
+     * 先尝试从Redis缓存中获取学生平均成绩，若不存在则从数据库查询并写入缓存
+     * @param studentId 学生的唯一标识符
+     * @return 返回包含学生平均成绩的实体对象列表
+     */
     @Override
     public List<AVGScore> getStudentScore(Long studentId) {
         String key=RedisConstants.AVG_SCORES_KEY+studentId;

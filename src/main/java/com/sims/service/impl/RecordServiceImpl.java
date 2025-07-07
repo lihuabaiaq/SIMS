@@ -19,6 +19,12 @@ public class RecordServiceImpl implements RecordService {
     @Resource
     private RecordMapper recordMapper;
 
+    /**
+     * 获取学生的课程成绩记录
+     * @param studentId 学生ID
+     * @param semester 学期
+     * @return 学生的课程成绩记录列表
+     */
     @Override
     public List<StudentGradeVO> getCourseRecord(Long studentId, String semester) {
         if (studentId==null)
@@ -26,6 +32,12 @@ public class RecordServiceImpl implements RecordService {
         return recordMapper.getCourseRecord(studentId, semester);
     }
 
+    /**
+     * 获取学生的竞赛记录
+     * @param studentId 学生ID
+     * @param semester 学期
+     * @return 学生的竞赛记录列表
+     */
     @Override
     public List<CompetitionRecordVO> getCompetitionRecord(Long studentId, String semester) {
         if (studentId==null)
@@ -45,6 +57,12 @@ public class RecordServiceImpl implements RecordService {
         return recordMapper.getCompetitionRecord(studentId, startDate, endDate);
     }
 
+    /**
+     * 获取学生的活动记录
+     * @param studentId 学生ID
+     * @param semester 学期
+     * @return 学生的活动记录列表
+     */
     @Override
     public List<ActivityRecordVO> getActivityRecord(Long studentId, String semester) {
         if (studentId==null)

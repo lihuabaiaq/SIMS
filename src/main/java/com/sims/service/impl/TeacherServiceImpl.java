@@ -52,6 +52,11 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
     @Resource
     private GradeMapper gradeMapper;
 
+
+    /**
+     * 教师登录方法
+     * 根据传入的教师DTO信息（包含教师ID和密码）验证是否匹配，若匹配则返回该教师对象，否则抛出登录异常
+     */
     @Override
     public Teacher teacherLogin(TeacherDTO teacherDTO) {
         String password = teacherDTO.getPassword();
@@ -63,34 +68,40 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
         throw new LoginException("用户名或密码错误");
     }
 
+    /**
+     * 修改教师信息方法
+     * 验证原密码是否正确，若正确则加密新密码并更新教师信息
+     */
     @Override
     public void teachangeInfo(TeacherChangeDTO teacherChangeDTO) {
-        Teacher teacher=query()
-                .eq("teacher_id",teacherChangeDTO.getTeacherId())
+        Teacher teacher = query()
+                .eq("teacher_id", teacherChangeDTO.getTeacherId())
                 .one();
-        if(teacher==null || !teacher.getPassword().equals(MD5Util.encrypt(teacherChangeDTO.getOriginPassword())))
+        if (teacher == null || !teacher.getPassword().equals(MD5Util.encrypt(teacherChangeDTO.getOriginPassword())))
             throw new LoginException("原密码错误,无法修改");
         teacherChangeDTO.setChangePassword(MD5Util.encrypt(teacherChangeDTO.getChangePassword()));
         teacherMapper.updateInfo(teacherChangeDTO);
     }
 
+    /**
+     * 保存课程方法
+     * 设置课程学期、教师ID、状态等信息，并进行注册时间校验，最后发送消息到RabbitMQ
+     */
     @Override
     @Transactional
     public void saveCourse(Course course) {
         int currentMonth = LocalDate.now().getMonthValue();
-        if(currentMonth>8){
+        if (currentMonth > 8) {
             int smallYear = LocalDate.now().getYear();
-            int bigYear=LocalDate.now().getYear()+1;
-            course.setSemester(smallYear+"-"+bigYear+"-1");
-        }
-        else{
-            int smallYear = LocalDate.now().getYear()-1;
-            int bigYear=LocalDate.now().getYear();
-            if(LocalDate.now().getMonthValue()<3){
-                course.setSemester(smallYear+"-"+bigYear+"-1");
-            }
-            else{
-                course.setSemester(smallYear+"-"+bigYear+"-2");
+            int bigYear = LocalDate.now().getYear() + 1;
+            course.setSemester(smallYear + "-" + bigYear + "-1");
+        } else {
+            int smallYear = LocalDate.now().getYear() - 1;
+            int bigYear = LocalDate.now().getYear();
+            if (LocalDate.now().getMonthValue() < 3) {
+                course.setSemester(smallYear + "-" + bigYear + "-1");
+            } else {
+                course.setSemester(smallYear + "-" + bigYear + "-2");
             }
         }
         Long teacherId = UserHolder.getId();
@@ -105,80 +116,101 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
         if (endTime < 0)
             throw new RegisterException("结束时间不能早于当前时间");
         int insert = courseMapper.insert(course);
-        if(insert!=1)
+        if (insert != 1)
             throw new RegisterException("添加失败");
-        Long courseId= course.getCourseId();
+        Long courseId = course.getCourseId();
         log.info("课程添加成功{}", courseId);
-        rabbitTemplate.convertAndSend(MQConstants.DELAY_EXCHANGE,MQConstants.REGISTER_START_KEY,courseId, message -> {
+        rabbitTemplate.convertAndSend(MQConstants.DELAY_EXCHANGE, MQConstants.REGISTER_START_KEY, courseId, message -> {
             message.getMessageProperties().setDelayLong(startTime);
-            return message;}
-        );
-        stringRedisTemplate.opsForValue().set(RedisConstants.COURSE_FILL_KEY +courseId, String.valueOf(0));
-        rabbitTemplate.convertAndSend(MQConstants.DELAY_EXCHANGE,MQConstants.REGISTER_END_KEY,courseId,message -> {
+            return message;
+        });
+        stringRedisTemplate.opsForValue().set(RedisConstants.COURSE_FILL_KEY + courseId, String.valueOf(0));
+        rabbitTemplate.convertAndSend(MQConstants.DELAY_EXCHANGE, MQConstants.REGISTER_END_KEY, courseId, message -> {
             message.getMessageProperties().setDelayLong(endTime);
-        return message;}
-        );
+            return message;
+        });
     }
 
+    /**
+     * 获取教师所教授的课程列表
+     */
     @Override
     public List<Course> getCourse(Long teacherId) {
-        return courseService.lambdaQuery().eq(Course::getTeacherId,teacherId).list();
+        return courseService.lambdaQuery().eq(Course::getTeacherId, teacherId).list();
     }
 
+    /**
+     * 更新成绩方法
+     * 根据最终成绩计算绩点，并调用GradeMapper批量更新成绩信息
+     */
     @Override
     public void updateScores(List<ScoreDTO> scoreList) {
-        scoreList.forEach(scoreDTO ->{
-            if(scoreDTO.getFinalGrade() < 50){
+        scoreList.forEach(scoreDTO -> {
+            if (scoreDTO.getFinalGrade() < 50) {
                 scoreDTO.setGradePoint(0.0);
             } else {
-                scoreDTO.setGradePoint((scoreDTO.getFinalGrade() - 50) / 10);}
-            });
+                scoreDTO.setGradePoint((scoreDTO.getFinalGrade() - 50) / 10);
+            }
+        });
 
         gradeMapper.updateScores(scoreList);
     }
 
+    /**
+     * 获取指定课程的所有学生成绩
+     */
     @Override
     public List<Grade> getGrade(Long courseId) {
         List<Grade> gradeList = gradeMapper.getGrade(courseId);
         return gradeList;
     }
 
+    /**
+     * 结束课程方法
+     * 检查所有学生的成绩是否完整，若完整则将课程状态设置为结课
+     */
     @Override
     public void endCourse(Long courseId) {
         List<Grade> gradeList = gradeMapper.getGrade(courseId);
-        for(Grade grade:gradeList){
-            if(grade.getRegularGrade()==null || grade.getFinalGrade()==null || grade.getExamGrade()==null || grade.getComments()==null){
+        for (Grade grade : gradeList) {
+            if (grade.getRegularGrade() == null || grade.getFinalGrade() == null || grade.getExamGrade() == null || grade.getComments() == null) {
                 throw new CourseException("有学生成绩为空，无法结课");
             }
         }
         courseMapper.endCourse(courseId);
     }
 
+    /**
+     * RabbitMQ监听器：处理课程选课开始事件
+     */
     @RabbitListener(bindings = @QueueBinding(
-            value = @Queue(value = MQConstants.REGISTER_START_QUEUE,durable = "true"),
-            exchange = @Exchange(value =MQConstants.DELAY_EXCHANGE,delayed = "true"),
+            value = @Queue(value = MQConstants.REGISTER_START_QUEUE, durable = "true"),
+            exchange = @Exchange(value = MQConstants.DELAY_EXCHANGE, delayed = "true"),
             key = {MQConstants.REGISTER_START_KEY}
     ))
-    public void courseRegisterStart(Long courseId){
+    public void courseRegisterStart(Long courseId) {
         Course course = courseMapper.selectById(courseId);
-        if(course==null||course.getStatus()!=0)
+        if (course == null || course.getStatus() != 0)
             return;
         log.info("课程开始选课{}", courseId);
-        courseService.update().set("status",1).eq("course_id",courseId).update();
+        courseService.update().set("status", 1).eq("course_id", courseId).update();
     }
 
+    /**
+     * RabbitMQ监听器：处理课程选课结束事件
+     */
     @RabbitListener(bindings = @QueueBinding(
-            value = @Queue(value =MQConstants.REGISTER_END_QUEUE,durable = "true"),
-            exchange = @Exchange(value = MQConstants.DELAY_EXCHANGE,delayed = "true"),
+            value = @Queue(value = MQConstants.REGISTER_END_QUEUE, durable = "true"),
+            exchange = @Exchange(value = MQConstants.DELAY_EXCHANGE, delayed = "true"),
             key = {MQConstants.REGISTER_END_KEY}
     ))
-    public void courseRegisterEnd(Long courseId){
-        stringRedisTemplate.delete(RedisConstants.COURSE_FILL_KEY+courseId);
-        stringRedisTemplate.delete(RedisConstants.COURSE_REGISTER_KEY+courseId);
+    public void courseRegisterEnd(Long courseId) {
+        stringRedisTemplate.delete(RedisConstants.COURSE_FILL_KEY + courseId);
+        stringRedisTemplate.delete(RedisConstants.COURSE_REGISTER_KEY + courseId);
         Course course = courseMapper.selectById(courseId);
-        if(course==null||course.getStatus()!=1)
+        if (course == null || course.getStatus() != 1)
             return;
-        courseService.update().set("status",1).eq("course_id",courseId).update();
+        courseService.update().set("status", 1).eq("course_id", courseId).update();
         log.info("课程结束选课{}", courseId);
     }
 }

@@ -15,18 +15,40 @@ import java.util.List;
 public class RecordController {
     @Resource
     private RecordService recordService;
-//先调用studentController里面的getAvailableSemester创建下拉列表
+
+    /**
+     * 获取学生的课程成绩记录
+     *
+     * @param studentId 学生ID
+     * @param semester  学期
+     * @return Result<List<StudentGradeVO>> 包含学生课程成绩信息的结果对象
+     */
     @GetMapping("/course/{id}")
     public Result<List<StudentGradeVO>> getCourseRecord(@PathVariable(value = "id") Long studentId,
                                                         @RequestParam String semester) {
         return Result.ok(recordService.getCourseRecord(studentId, semester));
     }
 
+    /**
+     * 获取学生的竞赛记录
+     *
+     * @param studentId 学生ID
+     * @param semester  学期
+     * @return Result<List<CompetitionRecordVO>> 包含学生竞赛信息的结果对象
+     */
     @GetMapping("/competition/{id}")
     public Result<List<CompetitionRecordVO>> getCompetitionRecord(@PathVariable(value = "id") Long studentId,
                                                                   @RequestParam String semester) {
         return Result.ok(recordService.getCompetitionRecord(studentId, semester));
     }
+
+    /**
+     * 获取学生的活动记录
+     *
+     * @param studentId 学生ID
+     * @param semester  学期
+     * @return Result<List<ActivityRecordVO>> 包含学生活动信息的结果对象
+     */
     @GetMapping("/activity/{id}")
     public Result<List<ActivityRecordVO>> getActivityRecord(@PathVariable(value = "id") Long studentId,
                                                             @RequestParam String semester){
