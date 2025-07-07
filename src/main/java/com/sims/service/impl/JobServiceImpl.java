@@ -12,6 +12,7 @@ import com.sims.service.StudentService;
 import com.sims.util.AwardScoreUtil;
 import com.sims.util.UserHolder;
 import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -21,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
+@Slf4j
 @Service
 public class JobServiceImpl extends ServiceImpl<JobMapper, Job> implements JobService{
 
@@ -99,6 +100,7 @@ public class JobServiceImpl extends ServiceImpl<JobMapper, Job> implements JobSe
                     .map(jobVO -> JSONObject.parseObject(jobVO, JobVO.class))
                     .collect(Collectors.toList());
         } catch (Exception e) {
+            log.error("数据库异常");
             throw new DataBaseException("数据库错误");
         }
     }

@@ -54,8 +54,10 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         return courseMapper.getHavingList(grade,studentId).stream().peek(
                 courseVO -> {
                     String string = stringRedisTemplate.opsForValue().get(RedisConstants.COURSE_FILL_KEY + courseVO.getCourseId());
-                    if (string == null)
+                    if (string == null) {
+                        log.error("服务器异常");
                         throw new CourseException("课程未开放选课");
+                    }
                     courseVO.setCurrentStudents(Integer.valueOf(string));
                 }
         ).toList();
@@ -164,5 +166,6 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
             Integer currents = this.getById(course.getCourseId()).getCurrentStudents();
             stringRedisTemplate.opsForValue().set(RedisConstants.COURSE_FILL_KEY + course.getCourseId(), currents.toString());
         }
+        log.info("课程容量已释放");
     }
 }

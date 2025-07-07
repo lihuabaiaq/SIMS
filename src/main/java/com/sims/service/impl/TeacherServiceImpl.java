@@ -18,6 +18,7 @@ import com.sims.service.TeacherService;
 import com.sims.util.MD5Util;
 import com.sims.util.UserHolder;
 import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;
@@ -32,7 +33,7 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
-
+@Slf4j
 @Service
 public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> implements TeacherService {
 
@@ -93,25 +94,26 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
         Long teacherId = UserHolder.getId();
         course.setTeacherId(teacherId);
         course.setStatus(0);
-        int insert = courseMapper.insert(course);
-        if(insert!=1)
-            throw new RuntimeException("添加失败");
-        Long courseId= course.getCourseId();
         LocalDateTime registerStart = course.getRegisterStart();
         LocalDateTime registerEnd = course.getRegisterEnd();
+        long startTime = ChronoUnit.MILLIS.between(LocalDateTime.now(), registerStart);
+        if (startTime < 0)
+            throw new RegisterException("开始时间不能早于当前时间");
+        long endTime = ChronoUnit.MILLIS.between(LocalDateTime.now(), registerEnd);
+        if (endTime < 0)
+            throw new RegisterException("结束时间不能早于当前时间");
+        int insert = courseMapper.insert(course);
+        if(insert!=1)
+            throw new RegisterException("添加失败");
+        Long courseId= course.getCourseId();
+        log.info("课程添加成功{}", courseId);
         rabbitTemplate.convertAndSend(MQConstants.DELAY_EXCHANGE,MQConstants.REGISTER_START_KEY,courseId, message -> {
-            Long time=ChronoUnit.MILLIS.between(LocalDateTime.now(),registerStart);
-            if(time<0)
-                throw new RegisterException("开始时间不能早于当前时间");
-            message.getMessageProperties().setDelayLong(time);
+            message.getMessageProperties().setDelayLong(startTime);
             return message;}
         );
         stringRedisTemplate.opsForValue().set(RedisConstants.COURSE_FILL_KEY +courseId, String.valueOf(0));
         rabbitTemplate.convertAndSend(MQConstants.DELAY_EXCHANGE,MQConstants.REGISTER_END_KEY,courseId,message -> {
-            Long time=ChronoUnit.MILLIS.between(LocalDateTime.now(),registerEnd);
-            if(time<0)
-                throw new RegisterException("结束时间不能早于当前时间");
-            message.getMessageProperties().setDelayLong(time);
+            message.getMessageProperties().setDelayLong(endTime);
         return message;}
         );
     }
@@ -136,6 +138,7 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
         Course course = courseMapper.selectById(courseId);
         if(course==null||course.getStatus()!=0)
             return;
+        log.info("课程开始选课{}", courseId);
         courseService.update().set("status",1).eq("course_id",courseId).update();
     }
 
@@ -151,5 +154,6 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
         if(course==null||course.getStatus()!=1)
             return;
         courseService.update().set("status",1).eq("course_id",courseId).update();
+        log.info("课程结束选课{}", courseId);
     }
 }

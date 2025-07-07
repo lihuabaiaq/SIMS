@@ -65,3 +65,11 @@ knife4j:
 
 mybatis-plus:
   type-aliases-package: com.sims.pojo.entity
+
+logging:
+  level:
+    com.sims: info
+  pattern:
+    dateformat: HH:mm:ss:SSS
+  file:
+    name: "logs/sims"
