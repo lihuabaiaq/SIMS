@@ -7,11 +7,12 @@ import io.jsonwebtoken.Claims;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
-
+@Slf4j
 @Component
 public class JwtInterceptor implements HandlerInterceptor {
     @Resource
@@ -23,7 +24,6 @@ public class JwtInterceptor implements HandlerInterceptor {
             return true;
         }
         String requestURI = request.getRequestURI();
-        System.out.println(request);
         // 放行 Knife4j 所有相关资源
         if (requestURI.startsWith("/doc.html") ||
                 requestURI.startsWith("/v3/api-docs") ||
@@ -40,17 +40,12 @@ public class JwtInterceptor implements HandlerInterceptor {
         }
         if (token.startsWith("Bearer ")) {
             // 如果是从请求头获取的，就截取 "Bearer " 后面的部分
-            System.out.println(token);
-            System.out.println("34235234");
             token = token.substring(7);
-            //模拟 Spring Security 这样的专业安全框架，进行token解析前的预处理
-        } else {
-            // 2. 如果请求头没有，就直接从URL参数获取原始token
         }
 
         if (token==null||token.isEmpty()){
             response.setStatus(401);
-            System.out.println("token失效，不放行");
+            log.info("token为空");
             return false;
         }
 
@@ -58,12 +53,15 @@ public class JwtInterceptor implements HandlerInterceptor {
             Claims claims = JwtUtil.parseJWT(jwtConfiguration.getSecretKey(), token);
             Long id = claims.get("id", Long.class);
             UserHolder.saveId(id);
-            System.out.println("token有效");
+            log.info("校验成功");
             return true;
         } catch (Exception e) {
-            System.out.println("返回异常");
             response.setStatus(401);
             return false;
         }
+    }
+
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
+        UserHolder.remove();
     }
 }

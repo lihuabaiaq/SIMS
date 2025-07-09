@@ -2,6 +2,7 @@ package com.sims.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.sims.constants.CourseStatus;
 import com.sims.constants.MQConstants;
 import com.sims.constants.RedisConstants;
 import com.sims.handle.Exception.CourseException;
@@ -31,6 +32,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -56,7 +59,7 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
                     String string = stringRedisTemplate.opsForValue().get(RedisConstants.COURSE_FILL_KEY + courseVO.getCourseId());
                     if (string == null) {
                         log.error("服务器异常");
-                        throw new CourseException("课程未开放选课");
+                        throw new CourseException("服务器异常");
                     }
                     courseVO.setCurrentStudents(Integer.valueOf(string));
                 }
@@ -82,7 +85,7 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         if (course == null)
             throw new CourseException("没有该课程");
         // 检查课程状态是否为选课开放状态（状态1）
-        if (course.getStatus() != 1)
+        if (!course.getStatus().equals(CourseStatus.REGISTERING))
             throw new RegisterException("该课程未开放选课");
 
         Long studentId = UserHolder.getId();
@@ -142,8 +145,15 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         if (BooleanUtils.isFalse(stringRedisTemplate.opsForSet().isMember(key, studentId.toString())))
             throw new RegisterException("尚未选择该课程");
 
+        Grade existingGrade = gradeMapper.selectOne(new LambdaQueryWrapper<Grade>()
+                .eq(Grade::getStudentId, studentId)
+                .eq(Grade::getCourseId, courseId));
+        if (existingGrade == null) {
+            throw new RegisterException("操作过快，请稍后再试");
+        }
         // 从 Redis 中移除该学生的选课记录
         stringRedisTemplate.opsForSet().remove(key, studentId.toString());
+
         // 删除分布式锁
         stringRedisTemplate.delete(RedisConstants.LOCK_REGISTER_KEY + courseId + ":" + studentId);
 
@@ -182,11 +192,48 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
     }
 
     /**
+     * 定时任务：扫描即将开始的课程，安排发送选课开始消息
+     * 查询未来1小时内将开始选课的课程，并通过延迟队列在准确时间触发选课开始事件
+     */
+    @Scheduled(cron = "0 0 * * * *")
+    public void courseRegisterBeStart(){
+        List<Course> courses = this.lambdaQuery()
+                .lt(Course::getRegisterStart, LocalDateTime.now().plusHours(1L))
+                .gt(Course::getRegisterStart, LocalDateTime.now())
+                .list();
+        for (Course course : courses) {
+            // 发送消息到延迟交换机，设置延迟时间为距离注册开始时间的毫秒数
+            rabbitTemplate.convertAndSend(MQConstants.DELAY_EXCHANGE, MQConstants.REGISTER_START_KEY, course.getCourseId(), message -> {
+                message.getMessageProperties().setDelayLong(ChronoUnit.MILLIS.between(LocalDateTime.now(), course.getRegisterStart()));
+                return message;
+            });
+        }
+    }
+
+    /**
+     * 定时任务：扫描即将结束的课程，安排发送选课结束消息
+     * 查询未来1小时内将结束选课的课程，并通过延迟队列在准确时间触发选课结束事件
+     */
+    @Scheduled(cron = "0 0 * * * *")
+    public void courseRegisterBeEnd(){
+        List<Course> courses = this.lambdaQuery()
+                .lt(Course::getRegisterEnd, LocalDateTime.now().plusHours(1L))
+                .gt(Course::getRegisterEnd, LocalDateTime.now())
+                .list();
+        for (Course course : courses) {
+            // 发送消息到延迟交换机，设置延迟时间为距离注册结束时间的毫秒数
+            rabbitTemplate.convertAndSend(MQConstants.DELAY_EXCHANGE, MQConstants.REGISTER_END_KEY, course.getCourseId(), message -> {
+                message.getMessageProperties().setDelayLong(ChronoUnit.MILLIS.between(LocalDateTime.now(), course.getRegisterEnd()));
+                return message;
+            });
+        }
+    }
+    /**
      * 定时任务：每日中午释放课程容量，同步数据库 current_students 到 Redis
      */
     @Scheduled(cron = "0 0 12 * * *")
     public void Releasefill() {
-        List<Course> courses = this.query().eq("status", 1).list();
+        List<Course> courses = this.query().eq("status", CourseStatus.REGISTERING).list();
 
         // 遍历每门课程，将数据库中的 current_students 同步到 Redis
         for (Course course : courses) {
@@ -195,5 +242,41 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
         }
 
         log.info("课程容量已释放");
+    }
+
+
+    /**
+     * RabbitMQ监听器：处理课程选课开始事件
+     */
+    @RabbitListener(bindings = @QueueBinding(
+            value = @Queue(value = MQConstants.REGISTER_START_QUEUE, durable = "true"),
+            exchange = @Exchange(value = MQConstants.DELAY_EXCHANGE, delayed = "true"),
+            key = {MQConstants.REGISTER_START_KEY}
+    ))
+    public void courseRegisterStart(Long courseId) {
+        Course course = courseMapper.selectById(courseId);
+        if (course == null || !course.getStatus().equals(CourseStatus.NOT_START))
+            return;
+        stringRedisTemplate.opsForValue().set(RedisConstants.COURSE_FILL_KEY + courseId, String.valueOf(0));
+        this.update().set("status", CourseStatus.REGISTERING).eq("course_id", courseId).update();
+        log.info("课程开始选课{}", courseId);
+    }
+
+    /**
+     * RabbitMQ监听器：处理课程选课结束事件
+     */
+    @RabbitListener(bindings = @QueueBinding(
+            value = @Queue(value = MQConstants.REGISTER_END_QUEUE, durable = "true"),
+            exchange = @Exchange(value = MQConstants.DELAY_EXCHANGE, delayed = "true"),
+            key = {MQConstants.REGISTER_END_KEY}
+    ))
+    public void courseRegisterEnd(Long courseId) {
+        Course course = courseMapper.selectById(courseId);
+        if (course == null || !course.getStatus().equals(CourseStatus.REGISTERING))
+            return;
+        stringRedisTemplate.delete(RedisConstants.COURSE_FILL_KEY + courseId);
+        stringRedisTemplate.delete(RedisConstants.COURSE_REGISTER_KEY + courseId);
+        this.update().set("status", CourseStatus.STUDYING).eq("course_id", courseId).update();
+        log.info("课程结束选课{}", courseId);
     }
 }

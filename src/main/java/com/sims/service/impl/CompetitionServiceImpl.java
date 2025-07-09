@@ -29,8 +29,6 @@ public class CompetitionServiceImpl extends ServiceImpl<CompetitionMapper, Compe
     CompetitionMapper competitionMapper;
     @Resource
     StudentServiceImpl studentService;
-    @Resource
-    CourseMapper courseMapper;
     @Override
     public List<Competition> recentCompetition() {
         LocalDate exceptDate = LocalDate.now().plusMonths(6L);
