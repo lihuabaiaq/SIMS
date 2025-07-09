@@ -21,14 +21,10 @@ import com.sims.util.MD5Util;
 import com.sims.util.UserHolder;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.rabbit.annotation.Exchange;
-import org.springframework.amqp.rabbit.annotation.Queue;
-import org.springframework.amqp.rabbit.annotation.QueueBinding;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -47,8 +43,6 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
     CourseService courseService;
     @Resource
     RabbitTemplate rabbitTemplate;
-    @Resource
-    StringRedisTemplate stringRedisTemplate;
     @Resource
     private GradeMapper gradeMapper;
 
@@ -91,7 +85,6 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
      * 设置课程学期、教师ID、状态等信息，并进行注册时间校验，最后发送消息到RabbitMQ
      */
     @Override
-    @Transactional
     public void saveCourse(Course course) {
         int currentMonth = LocalDate.now().getMonthValue();
         if (currentMonth > 8) {
@@ -123,15 +116,19 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
             throw new RegisterException("添加失败");
         Long courseId = course.getCourseId();
         log.info("课程添加成功{}", courseId);
+
+        if(startTime<1000*60*60*24){
         rabbitTemplate.convertAndSend(MQConstants.DELAY_EXCHANGE, MQConstants.REGISTER_START_KEY, courseId, message -> {
             message.getMessageProperties().setDelayLong(startTime);
             return message;
         });
-        stringRedisTemplate.opsForValue().set(RedisConstants.COURSE_FILL_KEY + courseId, String.valueOf(0));
-        rabbitTemplate.convertAndSend(MQConstants.DELAY_EXCHANGE, MQConstants.REGISTER_END_KEY, courseId, message -> {
-            message.getMessageProperties().setDelayLong(endTime);
-            return message;
-        });
+        }
+        if(endTime<1000*60*60*24) {
+            rabbitTemplate.convertAndSend(MQConstants.DELAY_EXCHANGE, MQConstants.REGISTER_END_KEY, courseId, message -> {
+                message.getMessageProperties().setDelayLong(endTime);
+                return message;
+            });
+        }
     }
 
     /**
@@ -183,37 +180,4 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, Teacher> impl
         courseMapper.endCourse(courseId);
     }
 
-    /**
-     * RabbitMQ监听器：处理课程选课开始事件
-     */
-    @RabbitListener(bindings = @QueueBinding(
-            value = @Queue(value = MQConstants.REGISTER_START_QUEUE, durable = "true"),
-            exchange = @Exchange(value = MQConstants.DELAY_EXCHANGE, delayed = "true"),
-            key = {MQConstants.REGISTER_START_KEY}
-    ))
-    public void courseRegisterStart(Long courseId) {
-        Course course = courseMapper.selectById(courseId);
-        if (course == null || course.getStatus() != 0)
-            return;
-        log.info("课程开始选课{}", courseId);
-        courseService.update().set("status", 1).eq("course_id", courseId).update();
-    }
-
-    /**
-     * RabbitMQ监听器：处理课程选课结束事件
-     */
-    @RabbitListener(bindings = @QueueBinding(
-            value = @Queue(value = MQConstants.REGISTER_END_QUEUE, durable = "true"),
-            exchange = @Exchange(value = MQConstants.DELAY_EXCHANGE, delayed = "true"),
-            key = {MQConstants.REGISTER_END_KEY}
-    ))
-    public void courseRegisterEnd(Long courseId) {
-        stringRedisTemplate.delete(RedisConstants.COURSE_FILL_KEY + courseId);
-        stringRedisTemplate.delete(RedisConstants.COURSE_REGISTER_KEY + courseId);
-        Course course = courseMapper.selectById(courseId);
-        if (course == null || course.getStatus() != 1)
-            return;
-        courseService.update().set("status", 1).eq("course_id", courseId).update();
-        log.info("课程结束选课{}", courseId);
-    }
 }
