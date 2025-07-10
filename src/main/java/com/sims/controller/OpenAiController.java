@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.function.Function;
 
@@ -57,6 +58,8 @@ public class OpenAiController {
                 .content();
         return response.concatWith(Flux.just("[DONE]"));
     }
+
+
 
     @Bean
     @Description("适合参加什么竞赛,为什么适合参加该竞赛")
