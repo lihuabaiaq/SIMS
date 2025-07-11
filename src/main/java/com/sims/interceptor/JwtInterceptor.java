@@ -35,9 +35,6 @@ public class JwtInterceptor implements HandlerInterceptor {
         }
 
         String token = request.getHeader(jwtConfiguration.getTokenName());
-        if (token == null || token.isEmpty()) {
-            token = request.getParameter("token");
-        }
         if (token.startsWith("Bearer ")) {
             // 如果是从请求头获取的，就截取 "Bearer " 后面的部分
             token = token.substring(7);
