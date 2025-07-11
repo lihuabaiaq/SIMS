@@ -1,0 +1,72 @@
+/* global.css */
+
+/* 1. 定义 CSS 变量 (我们的设计规范) */
+:root {
+  /* 色彩体系 */
+  --primary-color: #3498db; /* 主色调，源于学生仪表盘的悬浮色 */
+  --primary-color-hover: #2980b9;
+  --success-color: #4caf50; /* 成功色，源于登录按钮 */
+  --success-color-hover: #45a049;
+  --danger-color: #e74c3c;  /* 危险/警告色，源于退出按钮 */
+  --danger-color-hover: #c0392b;
+
+  --text-color-primary: #2c3e50; /* 主要文字颜色 */
+  --text-color-secondary: #7f8c8d; /* 次要文字颜色 */
+  --text-color-on-primary: #ffffff; /* 在主色调背景上的文字颜色 */
+
+  --bg-color-page: #f5f7fa;   /* 页面背景色 */
+  --bg-color-card: #ffffff;   /* 卡片背景色 */
+  --border-color: #e0e0e0;    /* 边框颜色 */
+
+  /* 字体系统 */
+  --font-family-base: 'Helvetica Neue', Arial, sans-serif;
+  --font-size-h1: 1.75rem; /* 28px */
+  --font-size-h2: 1.25rem; /* 20px */
+  --font-size-base: 1rem;   /* 16px */
+  --font-size-small: 0.875rem;/* 14px */
+
+  /* 间距和圆角 */
+  --spacing-medium: 1.5rem;
+  --spacing-large: 2rem;
+  --border-radius-base: 8px;
+  --box-shadow-base: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* 2. 全局基础样式和重置 */
+body {
+  margin: 0;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-base);
+  color: var(--text-color-primary);
+  background-color: var(--bg-color-page);
+}
+
+/* 3. 通用样式类 (将组件中的通用样式提取到这里) */
+.welcome-card {
+  background-color: var(--bg-color-card);
+  border-radius: var(--border-radius-base);
+  padding: var(--spacing-medium) var(--spacing-large);
+  margin-bottom: var(--spacing-large);
+  box-shadow: var(--box-shadow-base);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.welcome-card h2 {
+  margin: 0;
+  font-size: var(--font-size-h2);
+  color: var(--text-color-primary);
+}
+
+.welcome-card p {
+  margin: 0.25rem 0 0;
+  color: var(--text-color-secondary);
+}
+
+.action-buttons-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--spacing-medium);
+}
